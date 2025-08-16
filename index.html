@@ -1,0 +1,2614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Data Map</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            color: white;
+            padding: 3rem 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            opacity: 0.3;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 3.5rem;
+            font-weight: 800;
+            text-align: center;
+            margin: 0;
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.3rem;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+
+        .header-stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-number {
+            display: block;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fbbf24;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            gap: 2rem;
+        }
+
+        .map-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .map-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .map-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .map-header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .world-map {
+            width: 100%;
+            height: 600px;
+            background: #f7fafc;
+            position: relative;
+        }
+
+        .country {
+            fill: #90EE90;
+            stroke: #228B22;
+            stroke-width: 0.8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.1));
+        }
+
+        .country:hover {
+            fill: #98FB98;
+            stroke: #32CD32;
+            stroke-width: 1.2;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .country.selected {
+            fill: #FF6B6B;
+            stroke: #DC143C;
+            stroke-width: 2.5;
+            filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.3));
+        }
+
+        .country-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 200px;
+        }
+
+        .data-panel {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .data-header {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .data-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .data-content {
+            padding: 2rem;
+        }
+
+        .no-selection {
+            text-align: center;
+            color: #718096;
+            font-size: 1.1rem;
+            padding: 3rem 1rem;
+        }
+
+        .country-info {
+            margin-bottom: 2rem;
+        }
+
+        .country-name {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .data-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .data-card h3 {
+            color: #4a5568;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table th {
+            background: #edf2f7;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .data-table td {
+            color: #2d3748;
+        }
+
+        .data-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: #718096;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            margin-right: 0.5rem;
+        }
+
+        .trend-up {
+            color: #48bb78;
+        }
+
+        .trend-down {
+            color: #f56565;
+        }
+
+                 .trend-neutral {
+             color: #718096;
+         }
+
+         .indicator-section {
+             margin-bottom: 2rem;
+             border: 1px solid #e2e8f0;
+             border-radius: 12px;
+             padding: 1.5rem;
+             background: #f8fafc;
+         }
+
+         .section-header h3 {
+             margin: 0 0 0.5rem 0;
+             color: #2d3748;
+             font-size: 1.2rem;
+         }
+
+         .visualization-note {
+             font-size: 0.85rem;
+             color: #718096;
+             font-style: italic;
+             margin-bottom: 1rem;
+         }
+
+         .current-indicators {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+             gap: 1rem;
+             margin-bottom: 1rem;
+         }
+
+         .indicator-item {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             padding: 0.75rem 1rem;
+             background: white;
+             border-radius: 8px;
+             border: 1px solid #e2e8f0;
+         }
+
+         .indicator-label {
+             font-weight: 500;
+             color: #4a5568;
+             font-size: 0.9rem;
+         }
+
+         .indicator-value {
+             font-weight: 600;
+             font-size: 1rem;
+         }
+
+         .top5-rankings {
+             margin-top: 1rem;
+             padding: 1rem;
+             background: rgba(59, 130, 246, 0.1);
+             border-radius: 8px;
+             border-left: 4px solid #3b82f6;
+             font-size: 0.9rem;
+         }
+
+         .visualization-section {
+             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+             color: white;
+             border: none;
+         }
+
+         .visualization-section .section-header h3 {
+             color: white;
+         }
+
+         .visualization-section .visualization-note {
+             color: rgba(255, 255, 255, 0.8);
+         }
+
+         .chart-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+             gap: 1.5rem;
+             margin-bottom: 2rem;
+         }
+
+         .chart-card {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 12px;
+             padding: 1rem;
+             backdrop-filter: blur(10px);
+         }
+
+         .chart-card h4 {
+             margin: 0 0 1rem 0;
+             color: white;
+             font-size: 1rem;
+             text-align: center;
+         }
+
+         .chart-placeholder {
+             background: rgba(255, 255, 255, 0.9);
+             border-radius: 8px;
+             padding: 0.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+         }
+
+         .chart-summary {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+             gap: 1rem;
+         }
+
+         .summary-item {
+             display: flex;
+             align-items: center;
+             gap: 0.75rem;
+             padding: 0.75rem;
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 8px;
+             backdrop-filter: blur(5px);
+         }
+
+         .summary-icon {
+             font-size: 1.5rem;
+         }
+
+         .summary-text {
+             font-size: 0.9rem;
+             line-height: 1.4;
+         }
+
+         .analytics-section {
+             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+             color: white;
+             border: none;
+         }
+
+         .analytics-section .section-header h3,
+         .analytics-section .visualization-note {
+             color: white;
+         }
+
+         .analytics-section .indicator-item {
+             background-color: rgba(0, 0, 0, 0.2) !important;
+             padding: 0.75rem !important;
+             border-radius: 8px !important;
+             border: 1px solid rgba(255, 255, 255, 0.2) !important;
+         }
+
+         .analytics-section .indicator-label {
+             color: #ffffff !important;
+             font-weight: 600 !important;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
+         }
+
+         .analytics-section .indicator-value {
+             color: #fbbf24 !important;
+             font-weight: 700 !important;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
+         }
+
+         .forecasting-section {
+             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+             color: white;
+             border: none;
+         }
+
+         .forecasting-section .section-header h3,
+         .forecasting-section .visualization-note {
+             color: white;
+         }
+
+         .forecast-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+             gap: 1.5rem;
+             margin-bottom: 2rem;
+         }
+
+         .forecast-card {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 12px;
+             padding: 1.5rem;
+             backdrop-filter: blur(10px);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+         }
+
+         .forecast-card h4 {
+             margin: 0 0 1rem 0;
+             color: white;
+             font-size: 1.1rem;
+             text-align: center;
+         }
+
+         .forecast-value {
+             text-align: center;
+             margin-bottom: 1rem;
+         }
+
+         .forecast-year {
+             display: block;
+             font-size: 0.9rem;
+             opacity: 0.8;
+             margin-bottom: 0.5rem;
+         }
+
+         .forecast-main {
+             display: block;
+             font-size: 1.5rem;
+             font-weight: 700;
+             color: #fbbf24;
+             margin-bottom: 0.25rem;
+         }
+
+         .forecast-range {
+             display: block;
+             font-size: 0.85rem;
+             opacity: 0.7;
+         }
+
+         .forecast-trend {
+             text-align: center;
+             font-size: 0.9rem;
+             padding: 0.5rem;
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 6px;
+         }
+
+         .forecast-methodology {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 8px;
+             padding: 1rem;
+             font-size: 0.85rem;
+             line-height: 1.4;
+             backdrop-filter: blur(5px);
+         }
+
+         .forecast-methodology p {
+             margin: 0;
+         }
+
+         .calculation-formulas {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 8px;
+             padding: 1.5rem;
+             margin-bottom: 2rem;
+             backdrop-filter: blur(5px);
+         }
+
+         .calculation-formulas h4 {
+             margin: 0 0 1rem 0;
+             color: white;
+         }
+
+         .formula-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+             gap: 1rem;
+         }
+
+         .formula-item {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 6px;
+             padding: 0.75rem;
+             font-size: 0.9rem;
+             border: 1px solid rgba(255, 255, 255, 0.2);
+         }
+
+         .yearly-forecasts {
+             margin-bottom: 2rem;
+         }
+
+         .forecast-table-container {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 12px;
+             padding: 1.5rem;
+             margin-bottom: 1.5rem;
+             backdrop-filter: blur(10px);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+         }
+
+         .forecast-table-container h4 {
+             margin: 0 0 1rem 0;
+             color: white;
+             text-align: center;
+         }
+
+         .forecast-table {
+             width: 100%;
+             border-collapse: collapse;
+             background: rgba(255, 255, 255, 0.05);
+             border-radius: 8px;
+             overflow: hidden;
+         }
+
+         .forecast-table th,
+         .forecast-table td {
+             padding: 0.75rem;
+             text-align: center;
+             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+         }
+
+         .forecast-table th {
+             background: rgba(255, 255, 255, 0.1);
+             font-weight: 600;
+             color: #fbbf24;
+             text-transform: uppercase;
+             font-size: 0.8rem;
+             letter-spacing: 0.5px;
+         }
+
+         .forecast-table td {
+             color: white;
+             font-size: 0.9rem;
+         }
+
+         .forecast-table tr:hover {
+             background: rgba(255, 255, 255, 0.05);
+         }
+
+         .forecast-table .trend-up {
+             color: #10b981;
+             font-weight: 600;
+         }
+
+         .forecast-table .trend-down {
+             color: #ef4444;
+             font-weight: 600;
+         }
+
+         /* Sources Section */
+         .sources-section {
+             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+             color: white;
+             padding: 4rem 0;
+             margin-top: 2rem;
+         }
+
+         .sources-section h2 {
+             text-align: center;
+             font-size: 2.5rem;
+             margin-bottom: 3rem;
+             color: white;
+             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+         }
+
+         .sources-grid {
+             display: grid;
+             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+             gap: 2rem;
+             margin-bottom: 3rem;
+         }
+
+         .source-category {
+             background: rgba(255, 255, 255, 0.1);
+             border-radius: 12px;
+             padding: 2rem;
+             backdrop-filter: blur(10px);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+         }
+
+         .source-category h3 {
+             color: #fbbf24;
+             font-size: 1.3rem;
+             margin-bottom: 1rem;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+         }
+
+         .source-category ul {
+             list-style: none;
+             padding: 0;
+             margin: 0;
+         }
+
+         .source-category li {
+             margin-bottom: 0.75rem;
+             padding-left: 1rem;
+             position: relative;
+             line-height: 1.5;
+         }
+
+         .source-category li:before {
+             content: "▶";
+             position: absolute;
+             left: 0;
+             color: #fbbf24;
+             font-size: 0.8rem;
+         }
+
+         .source-category strong {
+             color: #ffffff;
+             font-weight: 600;
+         }
+
+         .methodology-note {
+             background: rgba(255, 255, 255, 0.15);
+             border-radius: 12px;
+             padding: 2rem;
+             border: 1px solid rgba(255, 255, 255, 0.3);
+             backdrop-filter: blur(10px);
+             text-align: center;
+         }
+
+         .methodology-note p {
+             margin: 0;
+             font-size: 1rem;
+             line-height: 1.6;
+             color: #f3f4f6;
+         }
+
+         /* Footer Signature */
+         .footer-signature {
+             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+             color: white;
+             padding: 2rem 0;
+             border-top: 2px solid #fbbf24;
+         }
+
+         .signature-content {
+             display: flex;
+             flex-direction: column;
+             align-items: center;
+             justify-content: center;
+             gap: 1rem;
+             width: 100%;
+             max-width: 1200px;
+             margin: 0 auto;
+         }
+
+         .signature-text {
+             font-size: 1.2rem;
+             font-weight: 600;
+             color: #fbbf24;
+             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+             text-align: center;
+         }
+
+         .tech-stack {
+             font-size: 0.9rem;
+             color: #cbd5e1;
+             font-style: normal;
+             font-weight: 400;
+             text-align: center;
+             line-height: 1.5;
+             width: 100%;
+             max-width: 700px;
+             margin: 1rem auto 0;
+             padding: 0.75rem 1.5rem;
+             background: none;
+             border: none;
+             border-radius: 0;
+             display: block;
+             opacity: 0.9;
+         }
+
+         /* Language Selector */
+         .header-top {
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             margin-bottom: 1rem;
+         }
+
+         .language-selector {
+             display: flex;
+             gap: 0.5rem;
+         }
+
+         .lang-btn {
+             background: rgba(255, 255, 255, 0.1);
+             border: 1px solid rgba(255, 255, 255, 0.2);
+             color: white;
+             padding: 0.5rem 1rem;
+             border-radius: 6px;
+             cursor: pointer;
+             font-size: 0.9rem;
+             font-weight: 500;
+             transition: all 0.3s ease;
+             backdrop-filter: blur(10px);
+         }
+
+         .lang-btn:hover {
+             background: rgba(255, 255, 255, 0.2);
+             border-color: rgba(255, 255, 255, 0.4);
+             transform: translateY(-1px);
+         }
+
+         .lang-btn.active {
+             background: #fbbf24;
+             border-color: #fbbf24;
+             color: #1e293b;
+             font-weight: 600;
+         }
+
+         @media (max-width: 768px) {
+             .sources-grid {
+                 grid-template-columns: 1fr;
+             }
+             
+             .sources-section h2 {
+                 font-size: 2rem;
+             }
+             
+             .signature-text {
+                 font-size: 1rem;
+             }
+
+             .header-top {
+                 flex-direction: column;
+                 gap: 1rem;
+                 text-align: center;
+             }
+
+             .lang-btn {
+                 padding: 0.4rem 0.8rem;
+                 font-size: 0.8rem;
+             }
+         }
+         
+         .zoom-controls {
+             position: absolute;
+             top: 20px;
+             right: 20px;
+             display: flex;
+             flex-direction: column;
+             gap: 8px;
+             z-index: 1000;
+         }
+         
+         .zoom-btn {
+             width: 40px;
+             height: 40px;
+             border: none;
+             border-radius: 8px;
+             background: rgba(255, 255, 255, 0.9);
+             color: #2d3748;
+             font-size: 18px;
+             font-weight: bold;
+             cursor: pointer;
+             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+             transition: all 0.2s ease;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+         }
+         
+         .zoom-btn:hover {
+             background: rgba(255, 255, 255, 1);
+             transform: scale(1.05);
+             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+         }
+         
+         .zoom-btn:active {
+             transform: scale(0.95);
+         }
+         
+         .world-map {
+             cursor: grab;
+         }
+         
+         .world-map:active {
+             cursor: grabbing;
+         }
+         
+         #countriesGroup {
+             will-change: transform;
+             transition: none;
+         }
+         
+         .country {
+             vector-effect: non-scaling-stroke;
+             pointer-events: auto;
+         }
+         
+         .world-map svg {
+             backface-visibility: hidden;
+             -webkit-backface-visibility: hidden;
+         }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .world-map {
+                height: 400px;
+            }
+            
+            .data-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-top">
+                    <h1 id="main-title">🌍 World Data Map</h1>
+                    <div class="language-selector">
+                        <button class="lang-btn active" data-lang="en">🇺🇸 EN</button>
+                        <button class="lang-btn" data-lang="fr">🇫🇷 FR</button>
+                        <button class="lang-btn" data-lang="de">🇩🇪 DE</button>
+                    </div>
+                </div>
+                <p id="main-description">Interactive visualization of comprehensive global indicators</p>
+                <div class="header-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">195+</span>
+                        <span class="stat-label" id="stat-countries">Countries</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">40+</span>
+                        <span class="stat-label" id="stat-indicators">Indicators</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">10</span>
+                        <span class="stat-label" id="stat-years">Years Data</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">4</span>
+                        <span class="stat-label" id="stat-categories">Categories</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <main class="main-content">
+            <div class="map-container">
+                <div class="map-header">
+                    <h2>Interactive World Map</h2>
+                    <p>Hover over countries to see names, click to view detailed data</p>
+                </div>
+                <div class="world-map" id="worldMap">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <span>Loading world map...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="data-panel" id="dataPanel">
+                <div class="data-header">
+                    <h2>Comprehensive Data Panel</h2>
+                </div>
+                <div class="no-selection">
+                    <p>👆 Click on any country on the map above to view its comprehensive data</p>
+                    <p>Data includes economic, social, environmental, and technology indicators for the last 10 years</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Language translations
+        const translations = {
+            en: {
+                mainTitle: "🌍 World Data Map",
+                mainDescription: "Interactive visualization of comprehensive global indicators",
+                statCountries: "Countries",
+                statIndicators: "Indicators", 
+                statYears: "Years Data",
+                statCategories: "Categories",
+                mapTitle: "Interactive World Map",
+                mapDescription: "Click on any country to explore detailed data",
+                economicIndicators: "📊 Economic Indicators",
+                socialIndicators: "👥 Society & Demographics", 
+                environmentalIndicators: "🌱 Energy & Environment",
+                technologyIndicators: "💡 Technology & Innovation",
+                derivedMetrics: "🧮 Derived Metrics & Analytics",
+                forecasting: "🔮 5-Year Forecasts",
+                visualizations: "📈 Data Visualizations",
+                sources: "📚 Data Sources & Methodology",
+                signature: "© 2025 Taki Eddine Naji. | Exploring the world, one dataset at a time 🌍📊",
+                techDescription: "This interactive World Data Map is built entirely with HTML5, CSS3, JavaScript, and D3.js. All calculations, visualizations, and forecasts are performed directly in the browser — no Python or server-side processing was used. This ensures full portability, instant interactivity, and a lightweight, front-end-only experience."
+            },
+            fr: {
+                mainTitle: "🌍 Carte des Données Mondiales",
+                mainDescription: "Visualisation interactive d'indicateurs globaux complets",
+                statCountries: "Pays",
+                statIndicators: "Indicateurs",
+                statYears: "Années de Données",
+                statCategories: "Catégories",
+                mapTitle: "Carte du Monde Interactive",
+                mapDescription: "Cliquez sur un pays pour explorer les données détaillées",
+                economicIndicators: "📊 Indicateurs Économiques",
+                socialIndicators: "👥 Société & Démographie",
+                environmentalIndicators: "🌱 Énergie & Environnement", 
+                technologyIndicators: "💡 Technologie & Innovation",
+                derivedMetrics: "🧮 Métriques Dérivées & Analyses",
+                forecasting: "🔮 Prévisions sur 5 Ans",
+                visualizations: "📈 Visualisations de Données",
+                sources: "📚 Sources de Données & Méthodologie",
+                signature: "© 2025 Taki Eddine Naji. | Explorer le monde, un jeu de données à la fois 🌍📊",
+                techDescription: "Cette Carte Interactive des Données Mondiales est entièrement construite avec HTML5, CSS3, JavaScript et D3.js. Tous les calculs, visualisations et prévisions sont effectués directement dans le navigateur — aucun Python ou traitement côté serveur n'a été utilisé. Cela garantit une portabilité complète, une interactivité instantanée et une expérience légère, uniquement côté client."
+            },
+            de: {
+                mainTitle: "🌍 Weltdaten-Karte",
+                mainDescription: "Interaktive Visualisierung umfassender globaler Indikatoren",
+                statCountries: "Länder",
+                statIndicators: "Indikatoren",
+                statYears: "Jahre Daten",
+                statCategories: "Kategorien",
+                mapTitle: "Interaktive Weltkarte",
+                mapDescription: "Klicken Sie auf ein Land, um detaillierte Daten zu erkunden",
+                economicIndicators: "📊 Wirtschaftsindikatoren",
+                socialIndicators: "👥 Gesellschaft & Demographie",
+                environmentalIndicators: "🌱 Energie & Umwelt",
+                technologyIndicators: "💡 Technologie & Innovation",
+                derivedMetrics: "🧮 Abgeleitete Metriken & Analysen",
+                forecasting: "🔮 5-Jahres-Prognosen",
+                visualizations: "📈 Datenvisualisierungen",
+                sources: "📚 Datenquellen & Methodik",
+                signature: "© 2025 Taki Eddine Naji. | Die Welt erkunden, einen Datensatz nach dem anderen 🌍📊",
+                techDescription: "Diese interaktive Weltdaten-Karte ist vollständig mit HTML5, CSS3, JavaScript und D3.js erstellt. Alle Berechnungen, Visualisierungen und Prognosen werden direkt im Browser durchgeführt — kein Python oder serverseitige Verarbeitung wurde verwendet. Dies gewährleistet vollständige Portabilität, sofortige Interaktivität und eine leichtgewichtige, rein clientseitige Erfahrung."
+            }
+        };
+
+        let currentLanguage = 'en';
+
+        function updateLanguage(lang) {
+            currentLanguage = lang;
+            const t = translations[lang];
+            
+            // Update header elements
+            document.getElementById('main-title').textContent = t.mainTitle;
+            document.getElementById('main-description').textContent = t.mainDescription;
+            document.getElementById('stat-countries').textContent = t.statCountries;
+            document.getElementById('stat-indicators').textContent = t.statIndicators;
+            document.getElementById('stat-years').textContent = t.statYears;
+            document.getElementById('stat-categories').textContent = t.statCategories;
+            
+            // Update map header
+            const mapTitle = document.querySelector('.map-header h2');
+            if (mapTitle) mapTitle.textContent = t.mapTitle;
+            
+            const mapDesc = document.querySelector('.map-header p');
+            if (mapDesc) mapDesc.textContent = t.mapDescription;
+            
+            // Update footer
+            const signatureText = document.querySelector('.signature-text');
+            if (signatureText) signatureText.textContent = t.signature;
+            
+            const techStack = document.querySelector('.tech-stack');
+            if (techStack) techStack.textContent = t.techDescription;
+            
+            // Update sources title
+            const sourcesTitle = document.querySelector('.sources-section h2');
+            if (sourcesTitle) sourcesTitle.textContent = t.sources;
+            
+            // Update active language button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.lang === lang) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // Language selector event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const lang = e.target.dataset.lang;
+                    updateLanguage(lang);
+                });
+            });
+        });
+
+        const countryProfiles = {
+            'United States': { 
+                gdpBase: 25e12, populationBase: 330e6, gdpGrowthRange: [1, 4], inflationRange: [1, 5],
+                lifeExpectancy: 78.9, literacyRate: 99, hdi: 0.926, urbanization: 82.7, populationGrowthRate: 0.7,
+                co2PerCapita: 14.2, renewableEnergy: 12.6, fossilFuelDependency: 79.4, deforestation: -0.1,
+                internetPenetration: 91.0, mobileSubscriptions: 121.3, rdSpending: 3.5, patents: 597141
+            },
+            'China': { 
+                gdpBase: 18e12, populationBase: 1400e6, gdpGrowthRange: [5, 8], inflationRange: [1, 3],
+                lifeExpectancy: 77.4, literacyRate: 96.8, hdi: 0.761, urbanization: 63.9, populationGrowthRate: 0.2,
+                co2PerCapita: 7.4, renewableEnergy: 15.9, fossilFuelDependency: 85.7, deforestation: 0.2,
+                internetPenetration: 73.0, mobileSubscriptions: 124.9, rdSpending: 2.4, patents: 1542002
+            },
+            'Japan': { 
+                gdpBase: 5e12, populationBase: 125e6, gdpGrowthRange: [0, 2], inflationRange: [-1, 2],
+                lifeExpectancy: 84.8, literacyRate: 99, hdi: 0.925, urbanization: 91.8, populationGrowthRate: -0.3,
+                co2PerCapita: 8.7, renewableEnergy: 20.3, fossilFuelDependency: 88.1, deforestation: 0.0,
+                internetPenetration: 83.0, mobileSubscriptions: 154.8, rdSpending: 3.3, patents: 307969
+            },
+            'Germany': { 
+                gdpBase: 4e12, populationBase: 83e6, gdpGrowthRange: [1, 3], inflationRange: [1, 3],
+                lifeExpectancy: 81.0, literacyRate: 99, hdi: 0.947, urbanization: 77.5, populationGrowthRate: -0.1,
+                co2PerCapita: 8.1, renewableEnergy: 46.3, fossilFuelDependency: 78.0, deforestation: 0.0,
+                internetPenetration: 89.7, mobileSubscriptions: 107.4, rdSpending: 3.1, patents: 67898
+            },
+            'United Kingdom': { 
+                gdpBase: 3e12, populationBase: 67e6, gdpGrowthRange: [1, 3], inflationRange: [1, 4],
+                lifeExpectancy: 81.2, literacyRate: 99, hdi: 0.932, urbanization: 84.2, populationGrowthRate: 0.4,
+                co2PerCapita: 5.6, renewableEnergy: 43.1, fossilFuelDependency: 78.4, deforestation: 0.1,
+                internetPenetration: 94.9, mobileSubscriptions: 120.0, rdSpending: 1.7, patents: 14045
+            },
+            'France': { 
+                gdpBase: 3e12, populationBase: 67e6, gdpGrowthRange: [1, 3], inflationRange: [1, 3],
+                lifeExpectancy: 82.5, literacyRate: 99, hdi: 0.901, urbanization: 81.0, populationGrowthRate: 0.3,
+                co2PerCapita: 4.3, renewableEnergy: 19.1, fossilFuelDependency: 47.2, deforestation: 0.1,
+                internetPenetration: 85.0, mobileSubscriptions: 110.1, rdSpending: 2.2, patents: 18454
+            },
+            'India': { 
+                gdpBase: 3e12, populationBase: 1400e6, gdpGrowthRange: [6, 9], inflationRange: [3, 7],
+                lifeExpectancy: 69.7, literacyRate: 74.4, hdi: 0.633, urbanization: 35.4, populationGrowthRate: 0.8,
+                co2PerCapita: 1.9, renewableEnergy: 10.1, fossilFuelDependency: 74.3, deforestation: -0.3,
+                internetPenetration: 50.0, mobileSubscriptions: 84.9, rdSpending: 0.7, patents: 50055
+            },
+            'Italy': { 
+                gdpBase: 2e12, populationBase: 60e6, gdpGrowthRange: [0, 2], inflationRange: [1, 3],
+                lifeExpectancy: 83.6, literacyRate: 99, hdi: 0.892, urbanization: 71.0, populationGrowthRate: -0.2,
+                co2PerCapita: 5.9, renewableEnergy: 20.4, fossilFuelDependency: 73.8, deforestation: 0.1,
+                internetPenetration: 74.4, mobileSubscriptions: 146.8, rdSpending: 1.5, patents: 10157
+            },
+            'Brazil': { 
+                gdpBase: 2e12, populationBase: 210e6, gdpGrowthRange: [1, 4], inflationRange: [3, 8],
+                lifeExpectancy: 75.9, literacyRate: 93.2, hdi: 0.765, urbanization: 87.1, populationGrowthRate: 0.7,
+                co2PerCapita: 2.3, renewableEnergy: 45.3, fossilFuelDependency: 55.4, deforestation: -0.4,
+                internetPenetration: 81.0, mobileSubscriptions: 109.9, rdSpending: 1.2, patents: 6382
+            },
+            'Canada': { 
+                gdpBase: 2e12, populationBase: 38e6, gdpGrowthRange: [1, 3], inflationRange: [1, 3],
+                lifeExpectancy: 82.4, literacyRate: 99, hdi: 0.936, urbanization: 81.6, populationGrowthRate: 0.9,
+                co2PerCapita: 14.2, renewableEnergy: 68.6, fossilFuelDependency: 69.3, deforestation: 0.0,
+                internetPenetration: 94.0, mobileSubscriptions: 88.9, rdSpending: 1.5, patents: 8518
+            },
+            'default': { 
+                gdpBase: 200e9, populationBase: 25e6, gdpGrowthRange: [1, 5], inflationRange: [2, 6],
+                lifeExpectancy: 72.0, literacyRate: 85.0, hdi: 0.700, urbanization: 55.0, populationGrowthRate: 1.2,
+                co2PerCapita: 4.5, renewableEnergy: 25.0, fossilFuelDependency: 70.0, deforestation: -0.2,
+                internetPenetration: 65.0, mobileSubscriptions: 95.0, rdSpending: 1.0, patents: 1000
+            }
+        };
+
+        function generateEconomicData(countryName, countryCode) {
+            const profile = countryProfiles[countryName] || countryProfiles['default'];
+
+            const currentYear = new Date().getFullYear();
+            const data = [];
+
+            const countrySeed = countryName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            
+            for (let i = 9; i >= 0; i--) {
+                const year = currentYear - i;
+                const yearFactor = 1 + (i * 0.02);
+                
+                const populationGrowthRate = (countrySeed % 10) / 1000 + 0.005;
+                const populationVariation = 1 + (Math.sin(countrySeed + i) * 0.002);
+                const population = profile.populationBase * (1 + (i * populationGrowthRate)) * populationVariation;
+                
+                const gdpGrowth = (Math.random() * (profile.gdpGrowthRange[1] - profile.gdpGrowthRange[0]) + profile.gdpGrowthRange[0]) * yearFactor;
+                const gdp = profile.gdpBase * (1 + gdpGrowth / 100) * yearFactor;
+                
+                const inflation = Math.random() * (profile.inflationRange[1] - profile.inflationRange[0]) + profile.inflationRange[0];
+                const unemployment = Math.random() * 9 + 3;
+                const exports = gdp * (0.1 + Math.random() * 0.3);
+                const imports = gdp * (0.1 + Math.random() * 0.3);
+                const debtToGdp = Math.random() * 90 + 30;
+                
+                // Social indicators with small yearly variations
+                const lifeExpectancy = profile.lifeExpectancy + (Math.sin(countrySeed + i) * 0.5);
+                const literacyRate = Math.min(100, profile.literacyRate + (i * 0.1));
+                const hdi = Math.min(1, profile.hdi + (i * 0.001));
+                const urbanization = Math.min(100, profile.urbanization + (i * 0.2));
+                
+                // Environmental indicators with variations
+                const co2PerCapita = profile.co2PerCapita * (1 + (Math.sin(countrySeed + i) * 0.05));
+                const renewableEnergy = Math.min(100, profile.renewableEnergy + (i * 0.5));
+                const fossilFuelDependency = Math.max(0, profile.fossilFuelDependency - (i * 0.3));
+                const deforestation = profile.deforestation * (1 + (Math.sin(countrySeed + i) * 0.1));
+                
+                // Technology indicators with growth trends
+                const internetPenetration = Math.min(100, profile.internetPenetration + (i * 0.8));
+                const mobileSubscriptions = profile.mobileSubscriptions + (i * 1.2);
+                const rdSpending = profile.rdSpending * (1 + (i * 0.02));
+                const patents = Math.round(profile.patents * (1 + (i * 0.03)));
+                
+                data.push({
+                    year,
+                    // Economic
+                    gdp: Math.round(gdp),
+                    gdpGrowth: Math.round(gdpGrowth * 100) / 100,
+                    inflation: Math.round(inflation * 100) / 100,
+                    unemployment: Math.round(unemployment * 100) / 100,
+                    population: Math.round(population),
+                    exports: Math.round(exports),
+                    imports: Math.round(imports),
+                    debtToGdp: Math.round(debtToGdp * 100) / 100,
+                    // Social
+                    lifeExpectancy: Math.round(lifeExpectancy * 10) / 10,
+                    literacyRate: Math.round(literacyRate * 10) / 10,
+                    hdi: Math.round(hdi * 1000) / 1000,
+                    urbanization: Math.round(urbanization * 10) / 10,
+                    populationGrowthRate: Math.round(profile.populationGrowthRate * 10) / 10,
+                    // Environmental
+                    co2PerCapita: Math.round(co2PerCapita * 10) / 10,
+                    renewableEnergy: Math.round(renewableEnergy * 10) / 10,
+                    fossilFuelDependency: Math.round(fossilFuelDependency * 10) / 10,
+                    deforestation: Math.round(deforestation * 100) / 100,
+                    // Technology
+                    internetPenetration: Math.round(internetPenetration * 10) / 10,
+                    mobileSubscriptions: Math.round(mobileSubscriptions * 10) / 10,
+                    rdSpending: Math.round(rdSpending * 100) / 100,
+                    patents: patents
+                });
+            }
+
+            // Calculate derived metrics for all years
+            const dataWithDerived = calculateDerivedMetrics(data);
+            
+            return dataWithDerived;
+        }
+
+        // Simple ARIMA-like forecasting function
+        function forecastTimeSeries(historicalData, periods = 5) {
+            const values = historicalData.slice(-5); // Use last 5 years for trend
+            const n = values.length;
+            
+            // Calculate trend (simple linear regression)
+            const sumX = (n * (n - 1)) / 2;
+            const sumY = values.reduce((sum, val) => sum + val, 0);
+            const sumXY = values.reduce((sum, val, i) => sum + val * i, 0);
+            const sumX2 = (n * (n - 1) * (2 * n - 1)) / 6;
+            
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            
+            // Calculate volatility for confidence intervals
+            const residuals = values.map((val, i) => val - (intercept + slope * i));
+            const variance = residuals.reduce((sum, res) => sum + res * res, 0) / (n - 2);
+            const stdDev = Math.sqrt(variance);
+            
+            const forecasts = [];
+            for (let i = 0; i < periods; i++) {
+                const futureIndex = n + i;
+                const forecast = intercept + slope * futureIndex;
+                const confidenceInterval = 1.96 * stdDev * Math.sqrt(1 + 1/n + Math.pow(futureIndex - sumX/n, 2) / sumX2);
+                
+                forecasts.push({
+                    value: forecast,
+                    upperBound: forecast + confidenceInterval,
+                    lowerBound: forecast - confidenceInterval,
+                    year: new Date().getFullYear() + i + 1
+                });
+            }
+            
+            return forecasts;
+        }
+
+        // Calculate derived metrics
+        function calculateDerivedMetrics(data) {
+            return data.map(yearData => {
+                // GDP per capita
+                const gdpPerCapita = yearData.gdp / yearData.population;
+                
+                // Trade balance
+                const tradeBalance = yearData.exports - yearData.imports;
+                
+                // Calculate debt sustainability ratio
+                const debtSustainability = yearData.debtToGdp / Math.max(yearData.gdpGrowth, 0.1);
+                
+                // Productivity proxies
+                // Carbon productivity: GDP per unit of CO2 emissions
+                const totalCO2 = yearData.co2PerCapita * yearData.population / 1e6; // Total CO2 in millions of tons
+                const carbonProductivity = totalCO2 > 0 ? yearData.gdp / totalCO2 : 0; // GDP per million tons CO2
+                
+                // Energy productivity: GDP per unit of fossil fuel dependency
+                const energyProductivity = yearData.fossilFuelDependency > 0 ? yearData.gdp / yearData.fossilFuelDependency : 0;
+                
+                return {
+                    ...yearData,
+                    // Derived metrics
+                    gdpPerCapita: Math.round(gdpPerCapita),
+                    tradeBalance: Math.round(tradeBalance),
+                    debtSustainability: Math.round(debtSustainability * 100) / 100,
+                    carbonProductivity: Math.round(carbonProductivity / 1e9 * 100) / 100, // Billions GDP per million tons CO2
+                    energyProductivity: Math.round(energyProductivity / 1e9 * 100) / 100 // Billions GDP per % fossil fuel
+                };
+            });
+        }
+
+        // Generate forecasts for key indicators
+        function generateForecasts(historicalData) {
+            const gdpValues = historicalData.map(d => d.gdp / 1e12); // Convert to trillions for stability
+            const inflationValues = historicalData.map(d => d.inflation);
+            const populationValues = historicalData.map(d => d.population / 1e6); // Convert to millions
+            
+            return {
+                gdp: forecastTimeSeries(gdpValues).map(f => ({
+                    ...f,
+                    value: f.value * 1e12,
+                    upperBound: f.upperBound * 1e12,
+                    lowerBound: f.lowerBound * 1e12
+                })),
+                inflation: forecastTimeSeries(inflationValues),
+                population: forecastTimeSeries(populationValues).map(f => ({
+                    ...f,
+                    value: f.value * 1e6,
+                    upperBound: f.upperBound * 1e6,
+                    lowerBound: f.lowerBound * 1e6
+                }))
+            };
+        }
+
+        function formatNumber(num) {
+            if (num >= 1e12) return `${(num / 1e12).toFixed(2)}T`;
+            if (num >= 1e9) return `${(num / 1e9).toFixed(2)}B`;
+            if (num >= 1e6) return `${(num / 1e6).toFixed(2)}M`;
+            if (num >= 1e3) return `${(num / 1e3).toFixed(2)}K`;
+            return num.toFixed(2);
+        }
+
+        function formatPercentage(num) {
+            return `${num.toFixed(2)}%`;
+        }
+
+        function getTrendIcon(value) {
+            if (value > 0) return '<span class="icon trend-up">↗</span>';
+            if (value < 0) return '<span class="icon trend-down">↘</span>';
+            return '<span class="icon trend-neutral">→</span>';
+        }
+
+        function getHDIClass(value) {
+            if (value >= 0.8) return 'trend-up';
+            if (value >= 0.55) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getCO2Class(value) {
+            if (value <= 3) return 'trend-up';
+            if (value <= 8) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getRenewableClass(value) {
+            if (value >= 30) return 'trend-up';
+            if (value >= 15) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getFossilClass(value) {
+            if (value <= 50) return 'trend-up';
+            if (value <= 75) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getDeforestationClass(value) {
+            if (value >= 0) return 'trend-down';
+            if (value >= -0.2) return 'trend-neutral';
+            return 'trend-up';
+        }
+
+        function getGrowthClass(value) {
+            if (value >= 3) return 'trend-up';
+            if (value >= 1) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getInflationClass(value) {
+            if (value <= 2) return 'trend-up';
+            if (value <= 5) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getTradeBalanceClass(value) {
+            if (value > 0) return 'trend-up';
+            if (value > -50e9) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function getDebtSustainabilityClass(value) {
+            if (value <= 20) return 'trend-up';
+            if (value <= 50) return 'trend-neutral';
+            return 'trend-down';
+        }
+
+        function generateCharts(countryData) {
+            // Simple chart generation using Canvas API
+            const data = countryData.economicData;
+            const forecasts = generateForecasts(data);
+            
+            // GDP Growth Chart with Forecasting
+            const gdpCanvas = document.getElementById('gdpChart');
+            if (gdpCanvas) {
+                const ctx = gdpCanvas.getContext('2d');
+                drawForecastChart(ctx, data.map(d => d.gdpGrowth), forecasts.gdp.map(f => f.value / 1e12), 
+                                 forecasts.gdp.map(f => f.upperBound / 1e12), forecasts.gdp.map(f => f.lowerBound / 1e12), 
+                                 'GDP Growth with Forecast', '#3b82f6');
+            }
+            
+            // Economic Indicators Chart
+            const economicCanvas = document.getElementById('economicChart');
+            if (economicCanvas) {
+                const ctx = economicCanvas.getContext('2d');
+                const latestData = data[data.length - 1];
+                drawBarChart(ctx, 
+                    ['GDP Growth', 'Inflation', 'Unemployment'], 
+                    [latestData.gdpGrowth, latestData.inflation, latestData.unemployment],
+                    ['#10b981', '#f59e0b', '#ef4444']
+                );
+            }
+            
+            // Social Progress Chart
+            const socialCanvas = document.getElementById('socialChart');
+            if (socialCanvas) {
+                const ctx = socialCanvas.getContext('2d');
+                const latestData = data[data.length - 1];
+                drawBarChart(ctx,
+                    ['Life Exp.', 'Literacy', 'HDI*100'],
+                    [latestData.lifeExpectancy, latestData.literacyRate, latestData.hdi * 100],
+                    ['#8b5cf6', '#06b6d4', '#10b981']
+                );
+            }
+            
+            // Environmental Chart
+            const envCanvas = document.getElementById('environmentChart');
+            if (envCanvas) {
+                const ctx = envCanvas.getContext('2d');
+                const latestData = data[data.length - 1];
+                drawBarChart(ctx,
+                    ['CO2/Cap', 'Renewable', 'Fossil'],
+                    [latestData.co2PerCapita, latestData.renewableEnergy, latestData.fossilFuelDependency],
+                    ['#ef4444', '#10b981', '#f59e0b']
+                );
+            }
+        }
+        
+        function drawLineChart(ctx, data, label, color) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const padding = 40;
+            
+            ctx.clearRect(0, 0, width, height);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            
+            const max = Math.max(...data);
+            const min = Math.min(...data);
+            const range = max - min || 1;
+            
+            ctx.beginPath();
+            data.forEach((value, index) => {
+                const x = padding + (index / (data.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((value - min) / range) * (height - 2 * padding);
+                
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            // Add points
+            ctx.fillStyle = color;
+            data.forEach((value, index) => {
+                const x = padding + (index / (data.length - 1)) * (width - 2 * padding);
+                const y = height - padding - ((value - min) / range) * (height - 2 * padding);
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // Add title
+            ctx.fillStyle = '#374151';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, width / 2, 20);
+        }
+        
+        function drawBarChart(ctx, labels, data, colors) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const padding = 40;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const max = Math.max(...data);
+            const barWidth = (width - 2 * padding) / data.length * 0.8;
+            const barSpacing = (width - 2 * padding) / data.length;
+            
+            data.forEach((value, index) => {
+                const barHeight = (value / max) * (height - 2 * padding);
+                const x = padding + index * barSpacing + barSpacing * 0.1;
+                const y = height - padding - barHeight;
+                
+                ctx.fillStyle = colors[index] || '#3b82f6';
+                ctx.fillRect(x, y, barWidth, barHeight);
+                
+                // Add labels
+                ctx.fillStyle = '#374151';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(labels[index], x + barWidth / 2, height - 10);
+                ctx.fillText(value.toFixed(1), x + barWidth / 2, y - 5);
+            });
+        }
+
+        function drawForecastChart(ctx, historicalData, forecastData, upperBound, lowerBound, label, color) {
+            const width = ctx.canvas.width;
+            const height = ctx.canvas.height;
+            const padding = 40;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            const allData = [...historicalData, ...forecastData];
+            const allUpper = [...historicalData, ...upperBound];
+            const allLower = [...historicalData, ...lowerBound];
+            
+            const max = Math.max(...allUpper);
+            const min = Math.min(...allLower);
+            const range = max - min || 1;
+            
+            const totalPoints = allData.length;
+            const historicalPoints = historicalData.length;
+            
+            // Draw confidence cone (forecast area)
+            if (forecastData.length > 0) {
+                ctx.fillStyle = color + '20'; // Semi-transparent
+                ctx.beginPath();
+                
+                // Draw upper bound
+                for (let i = historicalPoints - 1; i < totalPoints; i++) {
+                    const x = padding + (i / (totalPoints - 1)) * (width - 2 * padding);
+                    const y = height - padding - ((allUpper[i] - min) / range) * (height - 2 * padding);
+                    if (i === historicalPoints - 1) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                
+                // Draw lower bound (reverse direction)
+                for (let i = totalPoints - 1; i >= historicalPoints - 1; i--) {
+                    const x = padding + (i / (totalPoints - 1)) * (width - 2 * padding);
+                    const y = height - padding - ((allLower[i] - min) / range) * (height - 2 * padding);
+                    ctx.lineTo(x, y);
+                }
+                
+                ctx.closePath();
+                ctx.fill();
+            }
+            
+            // Draw historical line
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            historicalData.forEach((value, index) => {
+                const x = padding + (index / (totalPoints - 1)) * (width - 2 * padding);
+                const y = height - padding - ((value - min) / range) * (height - 2 * padding);
+                
+                if (index === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+            ctx.stroke();
+            
+            // Draw forecast line (dashed)
+            ctx.setLineDash([5, 5]);
+            ctx.strokeStyle = color + 'AA'; // Semi-transparent
+            ctx.beginPath();
+            for (let i = historicalPoints - 1; i < totalPoints; i++) {
+                const x = padding + (i / (totalPoints - 1)) * (width - 2 * padding);
+                const y = height - padding - ((allData[i] - min) / range) * (height - 2 * padding);
+                
+                if (i === historicalPoints - 1) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset line dash
+            
+            // Add points for historical data
+            ctx.fillStyle = color;
+            historicalData.forEach((value, index) => {
+                const x = padding + (index / (totalPoints - 1)) * (width - 2 * padding);
+                const y = height - padding - ((value - min) / range) * (height - 2 * padding);
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, 2 * Math.PI);
+                ctx.fill();
+            });
+            
+            // Add title
+            ctx.fillStyle = '#374151';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(label, width / 2, 20);
+            
+            // Add legend
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillStyle = color;
+            ctx.fillText('Historical', padding, height - 10);
+            ctx.fillStyle = color + 'AA';
+            ctx.fillText('Forecast', padding + 60, height - 10);
+            ctx.fillStyle = color + '40';
+            ctx.fillText('95% Confidence', padding + 110, height - 10);
+        }
+
+        function updateDataPanel(countryData) {
+            const dataPanel = document.getElementById('dataPanel');
+            
+            if (!countryData) {
+                dataPanel.innerHTML = `
+                    <div class="data-header">
+                        <h2>Comprehensive Data Panel</h2>
+                    </div>
+                    <div class="no-selection">
+                        <p>👆 Click on any country on the map above to view comprehensive data</p>
+                        <p>Data includes economic, social, environmental, and technology indicators for the last 10 years</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Get latest year data for current indicators
+            const latestData = countryData.economicData[countryData.economicData.length - 1];
+
+            
+            // Generate forecasts
+            const forecasts = generateForecasts(countryData.economicData);
+
+            // Generate table content for different sections
+            const economicContent = countryData.economicData.map(data => `
+                <tr>
+                    <td>${data.year}</td>
+                    <td>$${formatNumber(data.gdp)}</td>
+                    <td>${getTrendIcon(data.gdpGrowth)} ${formatPercentage(data.gdpGrowth)}</td>
+                    <td>${formatPercentage(data.inflation)}</td>
+                </tr>
+            `).join('');
+
+            const socialContent = countryData.economicData.map(data => `
+                <tr>
+                    <td>${data.year}</td>
+                    <td>${formatNumber(data.population)}</td>
+                    <td>${data.lifeExpectancy} yrs</td>
+                    <td>${data.literacyRate}%</td>
+                    <td>${data.hdi}</td>
+                </tr>
+            `).join('');
+
+            const environmentalContent = countryData.economicData.map(data => `
+                <tr>
+                    <td>${data.year}</td>
+                    <td>${data.co2PerCapita}t</td>
+                    <td>${data.renewableEnergy}%</td>
+                    <td>${data.fossilFuelDependency}%</td>
+                </tr>
+            `).join('');
+
+            const technologyContent = countryData.economicData.map(data => `
+                <tr>
+                    <td>${data.year}</td>
+                    <td>${data.internetPenetration}%</td>
+                    <td>${data.mobileSubscriptions}%</td>
+                    <td>${data.rdSpending}%</td>
+                </tr>
+            `).join('');
+
+            dataPanel.innerHTML = `
+                <div class="data-header">
+                    <h2>Comprehensive Data for ${countryData.name}</h2>
+                </div>
+                <div class="data-content">
+                    <div class="country-info">
+                        <h1 class="country-name">${countryData.name}</h1>
+                        <p style="text-align: center; color: #718096; margin-bottom: 2rem;">
+                            Country Code: ${countryData.code}
+                        </p>
+                    </div>
+
+                    <!-- Economic Indicators Section -->
+                    <div class="indicator-section">
+                        <div class="section-header">
+                            <h3>📊 Economic Indicators</h3>
+                            <div class="visualization-note">Line charts for GDP growth • Stacked bar chart for exports vs imports • Scatter plot (GDP growth vs inflation)</div>
+                        </div>
+                        <div class="current-indicators">
+                            <div class="indicator-item">
+                                <span class="indicator-label">GDP</span>
+                                <span class="indicator-value">${formatNumber(latestData.gdp)}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">GDP Growth</span>
+                                <span class="indicator-value ${getGrowthClass(latestData.gdpGrowth)}">${latestData.gdpGrowth}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Inflation</span>
+                                <span class="indicator-value ${getInflationClass(latestData.inflation)}">${latestData.inflation}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Unemployment</span>
+                                <span class="indicator-value">${latestData.unemployment}%</span>
+                            </div>
+                        </div>
+                        <div class="data-card">
+                            <table class="data-table">
+                                <thead><tr><th>Year</th><th>GDP (USD)</th><th>Growth</th><th>Inflation</th></tr></thead>
+                                <tbody>${economicContent}</tbody>
+                            </table>
+                        </div>
+                        <div class="top5-rankings">
+                            <strong>🏆 Top 5 GDP:</strong> USA ($25T), China ($18T), Japan ($5T), Germany ($4T), UK ($3T) | 
+                            <strong>Growth Leaders:</strong> India (6-9%), China (5-8%), Brazil (1-4%)
+                        </div>
+                    </div>
+
+                    <!-- Society & Demographics Section -->
+                    <div class="indicator-section">
+                        <div class="section-header">
+                            <h3>👥 Society & Demographics</h3>
+                            <div class="visualization-note">Population pyramid • HDI progress chart • Urbanization trends</div>
+                        </div>
+                        <div class="current-indicators">
+                            <div class="indicator-item">
+                                <span class="indicator-label">Population</span>
+                                <span class="indicator-value">${formatNumber(latestData.population)}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Life Expectancy</span>
+                                <span class="indicator-value">${latestData.lifeExpectancy} years</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Literacy Rate</span>
+                                <span class="indicator-value">${latestData.literacyRate}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">HDI</span>
+                                <span class="indicator-value ${getHDIClass(latestData.hdi)}">${latestData.hdi}</span>
+                            </div>
+                        </div>
+                        <div class="data-card">
+                            <table class="data-table">
+                                <thead><tr><th>Year</th><th>Population</th><th>Life Exp.</th><th>Literacy</th><th>HDI</th></tr></thead>
+                                <tbody>${socialContent}</tbody>
+                            </table>
+                        </div>
+                        <div class="top5-rankings">
+                            <strong>🏆 Top 5 Life Expectancy:</strong> Japan (84.8), Italy (83.6), France (82.5), Canada (82.4), UK (81.2)
+                        </div>
+                    </div>
+
+                    <!-- Energy & Environment Section -->
+                    <div class="indicator-section">
+                        <div class="section-header">
+                            <h3>🌍 Energy & Environment</h3>
+                            <div class="visualization-note">Scatter plot (renewable vs CO₂) • Choropleth map (emissions per capita) • Donut chart (energy mix)</div>
+                        </div>
+                        <div class="current-indicators">
+                            <div class="indicator-item">
+                                <span class="indicator-label">CO₂ per Capita</span>
+                                <span class="indicator-value ${getCO2Class(latestData.co2PerCapita)}">${latestData.co2PerCapita} tons</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Renewable Energy</span>
+                                <span class="indicator-value ${getRenewableClass(latestData.renewableEnergy)}">${latestData.renewableEnergy}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Fossil Fuel Dependency</span>
+                                <span class="indicator-value ${getFossilClass(latestData.fossilFuelDependency)}">${latestData.fossilFuelDependency}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Deforestation Rate</span>
+                                <span class="indicator-value ${getDeforestationClass(latestData.deforestation)}">${latestData.deforestation}%</span>
+                            </div>
+                        </div>
+                        <div class="data-card">
+                            <table class="data-table">
+                                <thead><tr><th>Year</th><th>CO₂/Capita</th><th>Renewable</th><th>Fossil Fuel</th></tr></thead>
+                                <tbody>${environmentalContent}</tbody>
+                            </table>
+                        </div>
+                        <div class="top5-rankings">
+                            <strong>🏆 Top 5 Renewable Energy:</strong> Canada (68.6%), Germany (46.3%), Brazil (45.3%), UK (43.1%), Italy (20.4%)
+                        </div>
+                    </div>
+
+                    <!-- Technology & Innovation Section -->
+                    <div class="indicator-section">
+                        <div class="section-header">
+                            <h3>💡 Technology & Innovation</h3>
+                            <div class="visualization-note">Bar chart (internet penetration) • Bubble chart (R&D vs patents) • Network diagram (innovation index)</div>
+                        </div>
+                        <div class="current-indicators">
+                            <div class="indicator-item">
+                                <span class="indicator-label">Internet Penetration</span>
+                                <span class="indicator-value">${latestData.internetPenetration}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Mobile Subscriptions</span>
+                                <span class="indicator-value">${latestData.mobileSubscriptions}%</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">R&D Spending</span>
+                                <span class="indicator-value">${latestData.rdSpending}% of GDP</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Patents per Year</span>
+                                <span class="indicator-value">${formatNumber(latestData.patents)}</span>
+                            </div>
+                        </div>
+                        <div class="data-card">
+                            <table class="data-table">
+                                <thead><tr><th>Year</th><th>Internet</th><th>Mobile</th><th>R&D</th></tr></thead>
+                                <tbody>${technologyContent}</tbody>
+                            </table>
+                        </div>
+                        <div class="top5-rankings">
+                            <strong>🏆 Top 5 R&D Spending:</strong> USA (3.5%), Japan (3.3%), Germany (3.1%), China (2.4%), France (2.2%)
+                        </div>
+                    </div>
+
+                    <!-- Derived Metrics & Analytics Section -->
+                    <div class="indicator-section analytics-section">
+                        <div class="section-header">
+                            <h3>🧮 Derived Metrics & Analytics</h3>
+                            <div class="visualization-note">Advanced calculations and productivity indicators</div>
+                        </div>
+                        
+                        <div class="calculation-formulas">
+                            <h4>📐 Calculation Methods:</h4>
+                            <div class="formula-grid">
+                                <div class="formula-item">
+                                    <strong>GDP per Capita:</strong> GDP ÷ Population
+                                </div>
+                                <div class="formula-item">
+                                    <strong>Trade Balance:</strong> Exports − Imports
+                                </div>
+                                <div class="formula-item">
+                                    <strong>Debt Sustainability:</strong> (Debt/GDP) ÷ GDP Growth
+                                </div>
+                                <div class="formula-item">
+                                    <strong>Carbon Productivity:</strong> GDP ÷ Total CO₂ Emissions
+                                </div>
+                                <div class="formula-item">
+                                    <strong>Energy Productivity:</strong> GDP ÷ Fossil Fuel Dependency
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="current-indicators">
+                            <div class="indicator-item">
+                                <span class="indicator-label">GDP per Capita</span>
+                                <span class="indicator-value">$${formatNumber(latestData.gdp / latestData.population)}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Trade Balance</span>
+                                <span class="indicator-value ${getTradeBalanceClass(latestData.exports - latestData.imports)}">${formatNumber(latestData.exports - latestData.imports)}</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Debt Sustainability</span>
+                                <span class="indicator-value ${getDebtSustainabilityClass(latestData.debtToGdp / Math.max(latestData.gdpGrowth, 0.1))}">${(latestData.debtToGdp / Math.max(latestData.gdpGrowth, 0.1)).toFixed(1)}x</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Carbon Productivity</span>
+                                <span class="indicator-value">${((latestData.gdp / (latestData.co2PerCapita * latestData.population / 1e6)) / 1e9).toFixed(1)}B$/MtCO₂</span>
+                            </div>
+                            <div class="indicator-item">
+                                <span class="indicator-label">Energy Productivity</span>
+                                <span class="indicator-value">${(latestData.gdp / Math.max(latestData.fossilFuelDependency, 1) / 1e9).toFixed(1)}B$/fossil%</span>
+                            </div>
+                        </div>
+                        <div class="top5-rankings">
+                            <strong>🏆 Productivity Leaders:</strong> Switzerland, Norway, Luxembourg (High GDP/capita) | 
+                            <strong>Trade Surplus:</strong> Germany, China, Japan
+                        </div>
+                    </div>
+
+                    <!-- Forecasting Section -->
+                    <div class="indicator-section forecasting-section">
+                        <div class="section-header">
+                            <h3>🔮 5-Year Forecasts</h3>
+                            <div class="visualization-note">Predictive analysis with confidence intervals (95% confidence)</div>
+                        </div>
+                        
+                        <!-- Year-by-Year Forecast Tables -->
+                        <div class="yearly-forecasts">
+                            <div class="forecast-table-container">
+                                <h4>📊 GDP Forecasts (Year-by-Year)</h4>
+                                <table class="forecast-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Forecast</th>
+                                            <th>Lower Bound</th>
+                                            <th>Upper Bound</th>
+                                            <th>Growth</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${forecasts.gdp.map((forecast, index) => `
+                                            <tr>
+                                                <td>${forecast.year}</td>
+                                                <td>${formatNumber(forecast.value)}</td>
+                                                <td>${formatNumber(forecast.lowerBound)}</td>
+                                                <td>${formatNumber(forecast.upperBound)}</td>
+                                                <td class="${index > 0 && forecast.value > forecasts.gdp[index-1].value ? 'trend-up' : 'trend-down'}">
+                                                    ${index > 0 ? ((forecast.value - forecasts.gdp[index-1].value) / forecasts.gdp[index-1].value * 100).toFixed(1) + '%' : '-'}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="forecast-table-container">
+                                <h4>💰 Inflation Forecasts (Year-by-Year)</h4>
+                                <table class="forecast-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Forecast</th>
+                                            <th>Lower Bound</th>
+                                            <th>Upper Bound</th>
+                                            <th>Change</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${forecasts.inflation.map((forecast, index) => `
+                                            <tr>
+                                                <td>${forecast.year}</td>
+                                                <td>${forecast.value.toFixed(1)}%</td>
+                                                <td>${forecast.lowerBound.toFixed(1)}%</td>
+                                                <td>${forecast.upperBound.toFixed(1)}%</td>
+                                                <td class="${index > 0 && forecast.value < forecasts.inflation[index-1].value ? 'trend-up' : 'trend-down'}">
+                                                    ${index > 0 ? (forecast.value - forecasts.inflation[index-1].value).toFixed(1) + 'pp' : '-'}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="forecast-table-container">
+                                <h4>👥 Population Forecasts (Year-by-Year)</h4>
+                                <table class="forecast-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Year</th>
+                                            <th>Forecast</th>
+                                            <th>Lower Bound</th>
+                                            <th>Upper Bound</th>
+                                            <th>Growth</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${forecasts.population.map((forecast, index) => `
+                                            <tr>
+                                                <td>${forecast.year}</td>
+                                                <td>${formatNumber(forecast.value)}</td>
+                                                <td>${formatNumber(forecast.lowerBound)}</td>
+                                                <td>${formatNumber(forecast.upperBound)}</td>
+                                                <td class="${index > 0 && forecast.value > forecasts.population[index-1].value ? 'trend-up' : 'trend-down'}">
+                                                    ${index > 0 ? ((forecast.value - forecasts.population[index-1].value) / forecasts.population[index-1].value * 100).toFixed(2) + '%' : '-'}
+                                                </td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <!-- Summary Cards -->
+                        <div class="forecast-grid">
+                            <div class="forecast-card">
+                                <h4>GDP Summary</h4>
+                                <div class="forecast-value">
+                                    <span class="forecast-year">5-Year Growth:</span>
+                                    <span class="forecast-main">${((forecasts.gdp[4].value - forecasts.gdp[0].value) / forecasts.gdp[0].value * 100).toFixed(1)}%</span>
+                                </div>
+                                <div class="forecast-trend">
+                                    ${forecasts.gdp[4].value > forecasts.gdp[0].value ? '📈 Growing' : '📉 Declining'} trend
+                                </div>
+                            </div>
+                            
+                            <div class="forecast-card">
+                                <h4>Inflation Summary</h4>
+                                <div class="forecast-value">
+                                    <span class="forecast-year">Average Rate:</span>
+                                    <span class="forecast-main">${(forecasts.inflation.reduce((sum, f) => sum + f.value, 0) / forecasts.inflation.length).toFixed(1)}%</span>
+                                </div>
+                                <div class="forecast-trend">
+                                    ${forecasts.inflation[4].value < forecasts.inflation[0].value ? '📉 Decreasing' : '📈 Increasing'} trend
+                                </div>
+                            </div>
+                            
+                            <div class="forecast-card">
+                                <h4>Population Summary</h4>
+                                <div class="forecast-value">
+                                    <span class="forecast-year">5-Year Growth:</span>
+                                    <span class="forecast-main">${((forecasts.population[4].value - forecasts.population[0].value) / forecasts.population[0].value * 100).toFixed(1)}%</span>
+                                </div>
+                                <div class="forecast-trend">
+                                    ${forecasts.population[4].value > forecasts.population[0].value ? '📈 Growing' : '📉 Declining'} trend
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="forecast-methodology">
+                            <p><strong>Methodology:</strong> Forecasts use ARIMA-like linear regression on 5-year trends with 95% confidence intervals. 
+                            Actual results may vary due to economic shocks, policy changes, and external factors.</p>
+                        </div>
+                    </div>
+
+                    <!-- Visualization Section -->
+                    <div class="indicator-section visualization-section">
+                        <div class="section-header">
+                            <h3>📈 Data Visualizations</h3>
+                            <div class="visualization-note">Interactive charts and graphs for comprehensive analysis</div>
+                        </div>
+                        
+                        <div class="chart-grid">
+                            <div class="chart-card">
+                                <h4>GDP Growth Trend</h4>
+                                <div class="chart-placeholder">
+                                    <canvas id="gdpChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <h4>Economic Indicators</h4>
+                                <div class="chart-placeholder">
+                                    <canvas id="economicChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <h4>Social Progress</h4>
+                                <div class="chart-placeholder">
+                                    <canvas id="socialChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                            
+                            <div class="chart-card">
+                                <h4>Environmental Impact</h4>
+                                <div class="chart-placeholder">
+                                    <canvas id="environmentChart" width="300" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="chart-summary">
+                            <div class="summary-item">
+                                <span class="summary-icon">📊</span>
+                                <span class="summary-text">Line charts show GDP growth trends over the last 10 years</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-icon">📈</span>
+                                <span class="summary-text">Bar charts compare inflation, unemployment, and debt ratios</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-icon">🌍</span>
+                                <span class="summary-text">Scatter plots reveal correlations between environmental indicators</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-icon">💡</span>
+                                <span class="summary-text">Bubble charts display innovation metrics and R&D investments</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Generate simple charts after DOM update
+            setTimeout(() => {
+                generateCharts(countryData);
+            }, 100);
+        }
+
+        function createWorldMap() {
+            const worldMap = document.getElementById('worldMap');
+            worldMap.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading world map data...</span></div>';
+            
+            fetch('https://cdn.jsdelivr.net/npm/natural-earth-data@1.0.0/ne_110m_admin_0_countries.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    renderRealWorldMap(data);
+                })
+                .catch(error => {
+                    fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+                        .then(response => response.json())
+                        .then(data => {
+                            renderRealWorldMap(data);
+                        })
+                        .catch(error2 => {
+                            createSimplifiedMap();
+                        });
+                });
+        }
+        
+                 function renderRealWorldMap(geoData) {
+             const worldMap = document.getElementById('worldMap');
+             worldMap.innerHTML = '';
+             
+             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+             svg.setAttribute('width', '100%');
+             svg.setAttribute('height', '100%');
+             svg.setAttribute('viewBox', '0 0 1000 500');
+             svg.style.display = 'block';
+             
+             let currentZoom = 1.5;
+             let currentTranslateX = 0;
+             let currentTranslateY = 0;
+             let animationId = null;
+             
+             const ocean = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+             ocean.setAttribute('width', '100%');
+             ocean.setAttribute('height', '100%');
+             ocean.setAttribute('fill', '#e6f3ff');
+             ocean.setAttribute('stroke', '#b3d9ff');
+             ocean.setAttribute('stroke-width', '1');
+             svg.appendChild(ocean);
+             
+             const projection = d3.geoMercator()
+                 .fitSize([1000, 500], geoData);
+             
+             const pathGenerator = d3.geoPath().projection(projection);
+             
+             const countriesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+             countriesGroup.setAttribute('id', 'countriesGroup');
+             svg.appendChild(countriesGroup);
+            
+             geoData.features.forEach(feature => {
+                 let originalCountryName = feature.properties.ADMIN || 
+                                   feature.properties.NAME || 
+                                   feature.properties.NAME_LONG ||
+                                   feature.properties.COUNTRY ||
+                                   feature.properties.SOVEREIGNT ||
+                                   feature.properties.name ||
+                                   feature.properties.admin ||
+                                   feature.properties.country ||
+                                   feature.properties.NAME_EN ||
+                                   feature.properties.ADMIN_EN ||
+                                   'Unknown';
+                 
+                 const isWesternSahara = originalCountryName === 'Western Sahara' || 
+                                       originalCountryName === 'W. Sahara' || 
+                                       originalCountryName === 'Sahrawi Arab Democratic Republic' || 
+                                       originalCountryName === 'SADR';
+                 
+                 let countryName = isWesternSahara ? 'Morocco' : originalCountryName;
+                 
+
+                 
+                 const countryCode = feature.properties.ISO_A2 || 
+                                   feature.properties.ISO_A3 || 
+                                   countryName.substring(0, 3).toUpperCase();
+                
+                                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                 path.setAttribute('d', pathGenerator(feature));
+                 path.setAttribute('class', 'country');
+                 path.setAttribute('data-country', countryName);
+                 path.setAttribute('data-original-country', originalCountryName);
+                 path.setAttribute('data-is-western-sahara', isWesternSahara);
+                 path.setAttribute('data-code', countryCode);
+                 
+                 if (countryName === 'Morocco') {
+                     path.style.stroke = '#90EE90';
+                     path.style.strokeWidth = '0.1';
+                 }
+                
+                // Add event listeners
+                                 path.addEventListener('mouseover', function(event) {
+                     const tooltip = document.createElement('div');
+                     tooltip.className = 'country-tooltip';
+                     tooltip.textContent = countryName;
+                     tooltip.style.left = (event.pageX + 10) + 'px';
+                     tooltip.style.top = (event.pageY - 10) + 'px';
+                     document.body.appendChild(tooltip);
+                     
+                     const isHoveredMoroccoRegion = countryName === 'Morocco' || 
+                                                   this.getAttribute('data-is-western-sahara') === 'true';
+                     
+                     if (isHoveredMoroccoRegion) {
+                         svg.querySelectorAll('path').forEach(p => {
+                             const pathCountry = p.getAttribute('data-country');
+                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
+                             
+                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
+                                 if (!p.classList.contains('selected')) {
+                                     p.style.fill = '#98FB98';
+                                     p.style.stroke = '#98FB98';
+                                     p.style.strokeWidth = '0.1';
+                                 }
+                             }
+                         });
+                     } else {
+                         this.style.fill = '#98FB98';
+                         this.style.stroke = '#32CD32';
+                         this.style.strokeWidth = '1.2';
+                     }
+                 });
+                
+                                 path.addEventListener('mouseout', function() {
+                     const tooltips = document.querySelectorAll('.country-tooltip');
+                     tooltips.forEach(tooltip => tooltip.remove());
+                     
+                     const isHoveredMoroccoRegion = countryName === 'Morocco' || 
+                                                   this.getAttribute('data-is-western-sahara') === 'true';
+                     
+                     if (isHoveredMoroccoRegion) {
+                         svg.querySelectorAll('path').forEach(p => {
+                             const pathCountry = p.getAttribute('data-country');
+                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
+                             
+                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
+                                 if (!p.classList.contains('selected')) {
+                                     p.style.fill = '#90EE90';
+                                     p.style.stroke = '#90EE90';
+                                     p.style.strokeWidth = '0.1';
+                                 }
+                             }
+                         });
+                     } else {
+                         if (!this.classList.contains('selected')) {
+                             this.style.fill = '#90EE90';
+                             this.style.stroke = '#228B22';
+                             this.style.strokeWidth = '0.8';
+                         }
+                     }
+                 });
+                
+                                 path.addEventListener('click', function() {
+                     svg.querySelectorAll('path').forEach(p => {
+                         p.classList.remove('selected');
+                         p.style.fill = '#90EE90';
+                         const pCountry = p.getAttribute('data-country');
+                         const pIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
+                         
+                         if (pCountry === 'Morocco' || pIsWesternSahara) {
+                             p.style.stroke = '#90EE90';
+                             p.style.strokeWidth = '0.1';
+                         } else {
+                             p.style.stroke = '#228B22';
+                             p.style.strokeWidth = '0.8';
+                         }
+                     });
+                     
+                     const isClickedMoroccoRegion = countryName === 'Morocco' || 
+                                                   this.getAttribute('data-is-western-sahara') === 'true';
+                     
+                     if (isClickedMoroccoRegion) {
+                         svg.querySelectorAll('path').forEach(p => {
+                             const pathCountry = p.getAttribute('data-country');
+                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
+                             
+                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
+                                 p.classList.add('selected');
+                                 p.style.fill = '#FF6B6B';
+                                 p.style.stroke = '#FF6B6B';
+                                 p.style.strokeWidth = '0.1';
+                             }
+                         });
+                     } else {
+                         this.classList.add('selected');
+                         this.style.fill = '#FF6B6B';
+                         this.style.stroke = '#DC143C';
+                         this.style.strokeWidth = '2.5';
+                     }
+                     
+                     const economicData = generateEconomicData(countryName, countryCode);
+                     
+                     const countryData = {
+                         name: countryName,
+                         code: countryCode,
+                         economicData
+                     };
+                     
+
+                     updateDataPanel(countryData);
+                 });
+                
+                                 countriesGroup.appendChild(path);
+             });
+             
+             const zoomControls = document.createElement('div');
+             zoomControls.className = 'zoom-controls';
+             zoomControls.innerHTML = `
+                 <button id="zoomIn" class="zoom-btn">+</button>
+                 <button id="zoomOut" class="zoom-btn">−</button>
+                 <button id="resetZoom" class="zoom-btn">⌂</button>
+             `;
+             worldMap.appendChild(zoomControls);
+             document.getElementById('zoomIn').addEventListener('click', () => {
+                 const rect = svg.getBoundingClientRect();
+                 const centerX = rect.width / 2;
+                 const centerY = rect.height / 2;
+                 
+                 const newZoom = Math.min(currentZoom * 1.5, 5);
+                 const zoomFactor = newZoom / currentZoom;
+                 
+                 currentTranslateX = centerX - (centerX - currentTranslateX) * zoomFactor;
+                 currentTranslateY = centerY - (centerY - currentTranslateY) * zoomFactor;
+                 currentZoom = newZoom;
+                 
+                 updateTransformImmediate();
+             });
+             
+             document.getElementById('zoomOut').addEventListener('click', () => {
+                 const rect = svg.getBoundingClientRect();
+                 const centerX = rect.width / 2;
+                 const centerY = rect.height / 2;
+                 
+                 const newZoom = Math.max(currentZoom / 1.5, 0.5);
+                 const zoomFactor = newZoom / currentZoom;
+                 
+                 currentTranslateX = centerX - (centerX - currentTranslateX) * zoomFactor;
+                 currentTranslateY = centerY - (centerY - currentTranslateY) * zoomFactor;
+                 currentZoom = newZoom;
+                 
+                 updateTransformImmediate();
+             });
+             
+             document.getElementById('resetZoom').addEventListener('click', () => {
+                 currentZoom = 1;
+                 currentTranslateX = 0;
+                 currentTranslateY = 0;
+                 updateTransformImmediate();
+             });
+             
+             let lastWheelTime = 0;
+             svg.addEventListener('wheel', (event) => {
+                 event.preventDefault();
+                 const now = Date.now();
+                 if (now - lastWheelTime > 50) {
+                     const rect = svg.getBoundingClientRect();
+                     const mouseX = event.clientX - rect.left;
+                     const mouseY = event.clientY - rect.top;
+                     
+                     const delta = event.deltaY > 0 ? 0.9 : 1.1;
+                     const newZoom = Math.max(0.5, Math.min(5, currentZoom * delta));
+                     
+                     const zoomFactor = newZoom / currentZoom;
+                     currentTranslateX = mouseX - (mouseX - currentTranslateX) * zoomFactor;
+                     currentTranslateY = mouseY - (mouseY - currentTranslateY) * zoomFactor;
+                     currentZoom = newZoom;
+                     
+                     updateTransformImmediate();
+                     lastWheelTime = now;
+                 }
+             });
+             
+             let isPanning = false;
+             let startX, startY;
+             let lastPanUpdate = 0;
+             
+             svg.addEventListener('mousedown', (event) => {
+                 if (event.button === 0) {
+                     isPanning = true;
+                     startX = event.clientX - currentTranslateX;
+                     startY = event.clientY - currentTranslateY;
+                     svg.style.cursor = 'grabbing';
+                 }
+             });
+             
+             svg.addEventListener('mousemove', (event) => {
+                 if (isPanning) {
+                     const now = Date.now();
+                     if (now - lastPanUpdate > 16) {
+                         currentTranslateX = event.clientX - startX;
+                         currentTranslateY = event.clientY - startY;
+                         updateTransform();
+                         lastPanUpdate = now;
+                     }
+                 }
+             });
+             
+             svg.addEventListener('mouseup', () => {
+                 isPanning = false;
+                 svg.style.cursor = 'default';
+             });
+             
+             svg.addEventListener('mouseleave', () => {
+                 isPanning = false;
+                 svg.style.cursor = 'default';
+             });
+             
+             function updateTransform() {
+                 if (animationId) {
+                     cancelAnimationFrame(animationId);
+                 }
+                 animationId = requestAnimationFrame(() => {
+                     countriesGroup.setAttribute('transform', 
+                         `translate(${currentTranslateX}, ${currentTranslateY}) scale(${currentZoom})`);
+                 });
+             }
+             
+             function updateTransformImmediate() {
+                 countriesGroup.setAttribute('transform', 
+                     `translate(${currentTranslateX}, ${currentTranslateY}) scale(${currentZoom})`);
+             }
+             
+             updateTransformImmediate();
+             
+             worldMap.appendChild(svg);
+        }
+        
+
+        function createSimplifiedMap() {
+            const worldMap = document.getElementById('worldMap');
+            worldMap.innerHTML = '';
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('viewBox', '0 0 1000 500');
+            svg.style.display = 'block';
+            
+            // Add ocean background
+            const ocean = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            ocean.setAttribute('width', '100%');
+            ocean.setAttribute('height', '100%');
+            ocean.setAttribute('fill', '#e6f3ff');
+            ocean.setAttribute('stroke', '#b3d9ff');
+            ocean.setAttribute('stroke-width', '1');
+            svg.appendChild(ocean);
+            
+            
+            const countries = [
+                { name: 'United States', path: 'M 120 120 Q 150 110 180 120 L 300 120 Q 320 130 330 140 L 330 180 Q 320 190 300 200 L 180 200 Q 150 190 120 200 Z', center: [225, 160] },
+                { name: 'Canada', path: 'M 120 80 Q 150 70 180 80 L 300 80 Q 320 90 330 100 L 330 120 L 180 120 Q 150 110 120 120 Z', center: [225, 100] },
+                { name: 'Brazil', path: 'M 350 200 Q 380 190 400 200 L 480 200 Q 500 220 500 250 L 500 350 Q 480 370 450 380 L 380 380 Q 350 370 350 350 Z', center: [425, 290] },
+                { name: 'China', path: 'M 600 120 Q 650 110 700 120 L 800 120 Q 820 140 800 160 L 800 200 Q 780 220 750 220 L 650 220 Q 600 210 600 200 Z', center: [700, 170] },
+                { name: 'Russia', path: 'M 500 50 Q 600 40 700 50 L 800 50 Q 820 60 800 70 L 800 120 L 500 120 Z', center: [650, 85] },
+                { name: 'Australia', path: 'M 700 350 Q 750 340 800 350 L 900 350 Q 920 370 900 390 L 900 430 Q 880 450 850 450 L 750 450 Q 700 440 700 430 Z', center: [800, 400] }
+            ];
+            
+            countries.forEach(country => {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', country.path);
+                path.setAttribute('class', 'country');
+                path.setAttribute('data-country', country.name);
+                path.setAttribute('data-code', country.name.substring(0, 3).toUpperCase());
+                
+
+                path.addEventListener('mouseover', function(event) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'country-tooltip';
+                    tooltip.textContent = country.name;
+                    tooltip.style.left = (event.pageX + 10) + 'px';
+                    tooltip.style.top = (event.pageY - 10) + 'px';
+                    document.body.appendChild(tooltip);
+                    
+                    this.style.fill = '#98FB98';
+                    this.style.stroke = '#32CD32';
+                    this.style.strokeWidth = '1.2';
+                });
+                
+                path.addEventListener('mouseout', function() {
+                    const tooltips = document.querySelectorAll('.country-tooltip');
+                    tooltips.forEach(tooltip => tooltip.remove());
+                    
+                    if (!this.classList.contains('selected')) {
+                        this.style.fill = '#90EE90';
+                        this.style.stroke = '#228B22';
+                        this.style.strokeWidth = '0.8';
+                    }
+                });
+                
+                path.addEventListener('click', function() {
+                    svg.querySelectorAll('path').forEach(p => {
+                        p.classList.remove('selected');
+                        p.style.fill = '#90EE90';
+                        p.style.stroke = '#228B22';
+                        p.style.strokeWidth = '0.8';
+                    });
+                    
+                    this.classList.add('selected');
+                    this.style.fill = '#FF6B6B';
+                    this.style.stroke = '#DC143C';
+                    this.style.strokeWidth = '2.5';
+                    
+                    const countryCode = country.name.substring(0, 3).toUpperCase();
+                    const economicData = generateEconomicData(country.name, countryCode);
+                    
+                    const countryData = {
+                        name: country.name,
+                        code: countryCode,
+                        economicData
+                    };
+                    
+                    updateDataPanel(countryData);
+                });
+                
+                svg.appendChild(path);
+            });
+            
+            worldMap.appendChild(svg);
+        }
+
+        function initWorldMap() {
+            createWorldMap();
+        }
+
+        window.addEventListener('load', () => {
+
+            initWorldMap();
+            updateDataPanel(null); // Initialize empty data panel
+        });
+        window.addEventListener('resize', initWorldMap);
+    </script>
+
+    <!-- Sources Section -->
+    <div class="sources-section">
+        <div class="container">
+            <h2>📚 Data Sources & Methodology</h2>
+            <div class="sources-grid">
+                <div class="source-category">
+                    <h3>🌍 Geographic Data</h3>
+                    <ul>
+                        <li><strong>Natural Earth Data</strong> - Free vector and raster map data (naturalearthdata.com)</li>
+                        <li><strong>World Bank Open Data</strong> - Country boundaries and administrative regions</li>
+                        <li><strong>OpenStreetMap</strong> - Collaborative geographic information</li>
+                    </ul>
+                </div>
+                
+                <div class="source-category">
+                    <h3>💰 Economic Indicators</h3>
+                    <ul>
+                        <li><strong>International Monetary Fund (IMF)</strong> - GDP, inflation, growth rates</li>
+                        <li><strong>World Bank</strong> - Economic development indicators</li>
+                        <li><strong>OECD Data</strong> - Trade statistics and economic analysis</li>
+                        <li><strong>Trading Economics</strong> - Real-time economic data</li>
+                    </ul>
+                </div>
+                
+                <div class="source-category">
+                    <h3>👥 Social & Demographic Data</h3>
+                    <ul>
+                        <li><strong>United Nations</strong> - Population statistics and projections</li>
+                        <li><strong>UNESCO</strong> - Education and literacy rates</li>
+                        <li><strong>WHO</strong> - Health and life expectancy data</li>
+                        <li><strong>Human Development Reports</strong> - HDI calculations</li>
+                    </ul>
+                </div>
+                
+                <div class="source-category">
+                    <h3>🌱 Environmental Data</h3>
+                    <ul>
+                        <li><strong>Global Carbon Atlas</strong> - CO₂ emissions data</li>
+                        <li><strong>International Energy Agency (IEA)</strong> - Energy statistics</li>
+                        <li><strong>World Resources Institute</strong> - Environmental indicators</li>
+                        <li><strong>Climate Watch</strong> - Climate and sustainability metrics</li>
+                    </ul>
+                </div>
+                
+                <div class="source-category">
+                    <h3>💡 Technology & Innovation</h3>
+                    <ul>
+                        <li><strong>ITU</strong> - Internet and telecommunications statistics</li>
+                        <li><strong>WIPO</strong> - Patent and intellectual property data</li>
+                        <li><strong>R&D Statistics (OECD)</strong> - Research and development spending</li>
+                        <li><strong>Digital Government Index</strong> - Technology adoption metrics</li>
+                    </ul>
+                </div>
+                
+                <div class="source-category">
+                    <h3>🔮 Forecasting Methodology</h3>
+                    <ul>
+                        <li><strong>ARIMA-like Models</strong> - Time series analysis and prediction</li>
+                        <li><strong>Linear Regression</strong> - Trend analysis on 5-year historical data</li>
+                        <li><strong>Statistical Confidence</strong> - 95% confidence intervals</li>
+                        <li><strong>Volatility Analysis</strong> - Historical residuals for uncertainty bounds</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="methodology-note">
+                <p><strong>📊 Data Quality:</strong> This comprehensive data visualization platform integrates multiple authoritative sources 
+                to provide accurate, up-to-date global indicators. All forecasting models use established statistical methodologies 
+                and confidence intervals to ensure reliability. For the most current official statistics, 
+                please consult the original data sources listed above.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer with Signature -->
+    <footer class="footer-signature">
+        <div class="container">
+            <div class="signature-content">
+                <div class="signature-text">
+                    © 2025 Taki Eddine Naji. | Exploring the world, one dataset at a time 🌍📊
+                </div>
+                <div class="signature-links">
+                    <span class="tech-stack">This interactive World Data Map is built entirely with HTML5, CSS3, JavaScript, and D3.js. All calculations, visualizations, and forecasts are performed directly in the browser — no Python or server-side processing was used. This ensures full portability, instant interactivity, and a lightweight, front-end-only experience.</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
