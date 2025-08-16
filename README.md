@@ -4,7 +4,7 @@ A comprehensive, interactive world map application that provides detailed analys
 
 ## 🚀 Live Demo
 
-**[🌐 View Live Demo](YOUR_DEMO_LINK_HERE)** *(Update this link with your deployment URL)*
+**[🌐 View Live Demo](https://takieddinenaji.github.io/interactive-world-data-map/)**
 
 ## ✨ Key Features
 
@@ -205,5 +205,6 @@ This project is open source and available under the MIT License.
 **Simply open `index.html` and start exploring the world's data landscape!** 🌍📊
 
 ---
+
 
 © 2025 Taki Eddine Naji | Exploring the world, one dataset at a time 🌍📊
