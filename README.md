@@ -1,3 +1,7 @@
+# Interactive World Data Map
+⚠️ **Disclaimer:** This first version uses generated data only. No real APIs were used. Values are for demonstration purposes and are not official.
+
+
 # 🌍 World Data Map
 
 A comprehensive, interactive world map application that provides detailed analysis of global indicators across economic, social, environmental, and technological categories. Click on any country to explore 31 comprehensive indicators with 10 years of historical data plus 5-year forecasts.
@@ -208,4 +212,5 @@ This project is open source and available under the MIT License.
 
 
 © 2025 Taki Eddine Naji | Exploring the world, one dataset at a time 🌍📊
+
 
