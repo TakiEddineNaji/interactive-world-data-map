@@ -2,6 +2,10 @@
 
 Interactive visualization of comprehensive global indicators with real-time data from authoritative sources, advanced forecasting capabilities, and full mobile support.
 
+## 🚀 Live Version with Real-Time Data
+
+**[🌐 View Live Demo](https://takieddinenaji.github.io/interactive-world-data-map/)**
+
 ## ✨ Features
 
 - **Interactive World Map**: Click on countries to view detailed data
@@ -237,5 +241,6 @@ This project is open source and available under the MIT License.
 ✅ **Easy Deployment** - Single file deployment with no dependencies  
 
 ---
+
 
 **Experience the most comprehensive world data visualization platform with advanced forecasting, mobile optimization, and multi-language support!** 🌍📊🚀
