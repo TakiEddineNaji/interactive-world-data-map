@@ -128,6 +128,127 @@
             border-radius: 8px;
         }
 
+        /* Country Search Box Styles */
+        .search-container {
+            position: relative;
+            max-width: 400px;
+            margin: 1rem auto;
+            z-index: 1000;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #1e40af;
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.2);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .search-box::placeholder {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border: 2px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 12px 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            display: none;
+        }
+
+        .search-results.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .search-result-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .search-result-item:hover {
+            background: #f8fafc;
+            color: #1e40af;
+        }
+
+        .search-result-item:last-child {
+            border-bottom: none;
+        }
+
+        .search-result-item .country-flag {
+            font-size: 1.25rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .search-result-item .country-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .search-result-item .country-code {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .search-result-item .country-region {
+            color: #94a3b8;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        .no-results {
+            padding: 1rem;
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            pointer-events: none;
+        }
+
+        .search-box-with-icon {
+            padding-left: 2.5rem;
+        }
+
         /* Enhanced Navigation Styles */
         .navigation {
             background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
@@ -1394,6 +1515,25 @@
 
                  /* Enhanced Mobile Responsiveness */
         @media (max-width: 768px) {
+            .search-container {
+                max-width: 90%;
+                margin: 0.75rem auto;
+            }
+            
+            .search-box {
+                padding: 0.875rem 1rem;
+                font-size: 1rem;
+            }
+            
+            .search-results {
+                max-height: 250px;
+            }
+            
+            .search-result-item {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+            
             .data-panel {
                 margin: 0.5rem;
                 border-radius: 12px;
@@ -2557,6 +2697,20 @@
                     </div>
                 </div>
                 <p id="main-description">Interactive visualization of comprehensive global indicators</p>
+                
+                <!-- Country Search Box -->
+                <div class="search-container">
+                    <div class="search-icon">🔍</div>
+                    <input 
+                        type="text" 
+                        class="search-box search-box-with-icon" 
+                        id="countrySearch" 
+                        placeholder="Search for a country... (e.g., Japan, Brazil, Morocco)"
+                        autocomplete="off"
+                    >
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+                
                 <div class="header-stats">
                     <div class="stat-item">
                         <span class="stat-number">195+</span>
@@ -4989,6 +5143,7 @@
                               props.ADMIN_EN ||
                               'Unknown';
                 
+                // Consolidate Western Sahara into Morocco
                 const isWesternSahara = originalCountryName === 'Western Sahara' || 
                                       originalCountryName === 'W. Sahara' || 
                                       originalCountryName === 'Sahrawi Arab Democratic Republic' || 
@@ -5016,7 +5171,6 @@
                 path.setAttribute('class', 'country');
                 path.setAttribute('data-country', countryName);
                 path.setAttribute('data-original-country', originalCountryName);
-                path.setAttribute('data-is-western-sahara', isWesternSahara);
                 path.setAttribute('data-code', countryCode);
                 
                 // Performance: Use CSS classes instead of inline styles where possible
@@ -5032,7 +5186,6 @@
                 // Cache country data for performance
                 countryData.set(countryName, {
                     originalName: originalCountryName,
-                    isWesternSahara,
                     code: countryCode
                 });
                 
@@ -5048,12 +5201,9 @@
                     clearTimeout(hoverTimeout);
                     hoverTimeout = setTimeout(() => {
                         // Performance: Use cached data instead of DOM queries
-                        const isHoveredMoroccoRegion = countryName === 'Morocco' || 
-                                                      this.getAttribute('data-is-western-sahara') === 'true';
-                        
-                        if (isHoveredMoroccoRegion) {
-                            // Performance: Batch DOM updates
-                            const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"], path[data-is-western-sahara="true"]');
+                        if (countryName === 'Morocco') {
+                            // Performance: Batch DOM updates for all Morocco regions
+                            const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"]');
                             moroccoPaths.forEach(p => {
                                 if (!p.classList.contains('selected')) {
                                     p.style.fill = '#98FB98';
@@ -5087,12 +5237,9 @@
                     tooltips.forEach(tooltip => tooltip.remove());
                     
                     // Performance: Use cached data
-                    const isHoveredMoroccoRegion = countryName === 'Morocco' || 
-                                                  this.getAttribute('data-is-western-sahara') === 'true';
-                    
-                    if (isHoveredMoroccoRegion) {
-                        // Performance: Batch DOM updates
-                        const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"], path[data-is-western-sahara="true"]');
+                    if (countryName === 'Morocco') {
+                        // Performance: Batch DOM updates for all Morocco regions
+                        const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"]');
                         moroccoPaths.forEach(p => {
                             if (!p.classList.contains('selected')) {
                                 p.style.fill = '#90EE90';
@@ -5115,9 +5262,8 @@
                          p.classList.remove('selected');
                          p.style.fill = '#90EE90';
                          const pCountry = p.getAttribute('data-country');
-                         const pIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
                          
-                         if (pCountry === 'Morocco' || pIsWesternSahara) {
+                         if (pCountry === 'Morocco') {
                              p.style.stroke = '#90EE90';
                              p.style.strokeWidth = '0.1';
                          } else {
@@ -5126,15 +5272,12 @@
                          }
                      });
                      
-                     const isClickedMoroccoRegion = countryName === 'Morocco' || 
-                                                   this.getAttribute('data-is-western-sahara') === 'true';
-                     
-                     if (isClickedMoroccoRegion) {
+                     if (countryName === 'Morocco') {
+                         // Select all Morocco regions (consolidated territory)
                          svg.querySelectorAll('path').forEach(p => {
                              const pathCountry = p.getAttribute('data-country');
-                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
                              
-                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
+                             if (pathCountry === 'Morocco') {
                                  p.classList.add('selected');
                                  p.style.fill = '#FF6B6B';
                                  p.style.stroke = '#FF6B6B';
@@ -5271,6 +5414,536 @@
              
              worldMap.appendChild(svg);
         }
+
+        // ===== COUNTRY SEARCH FUNCTIONALITY =====
+        
+        // Global country data for search
+        let globalCountryData = [];
+        
+        // Initialize country search functionality
+        function initCountrySearch() {
+            const searchBox = document.getElementById('countrySearch');
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!searchBox || !searchResults) return;
+            
+            // Add event listeners
+            searchBox.addEventListener('input', handleSearchInput);
+            searchBox.addEventListener('focus', handleSearchFocus);
+            searchBox.addEventListener('blur', handleSearchBlur);
+            
+            // Close search results when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!searchBox.contains(e.target) && !searchResults.contains(e.target)) {
+                    hideSearchResults();
+                }
+            });
+            
+            // Keyboard navigation
+            searchBox.addEventListener('keydown', handleSearchKeydown);
+        }
+        
+        // Handle search input
+        function handleSearchInput(e) {
+            const query = e.target.value.trim().toLowerCase();
+            
+            if (query.length < 2) {
+                hideSearchResults();
+                return;
+            }
+            
+            const results = searchCountries(query);
+            displaySearchResults(results);
+        }
+        
+        // Handle search focus
+        function handleSearchFocus() {
+            const query = document.getElementById('countrySearch').value.trim();
+            if (query.length >= 2) {
+                const results = searchCountries(query);
+                displaySearchResults(results);
+            }
+        }
+        
+        // Handle search blur
+        function handleSearchBlur() {
+            // Delay hiding to allow for clicks on results
+            setTimeout(hideSearchResults, 200);
+        }
+        
+        // Handle keyboard navigation
+        function handleSearchKeydown(e) {
+            const searchResults = document.getElementById('searchResults');
+            const visibleResults = searchResults.querySelectorAll('.search-result-item');
+            
+            if (!visibleResults.length) return;
+            
+            let currentIndex = -1;
+            visibleResults.forEach((item, index) => {
+                if (item.classList.contains('highlighted')) {
+                    currentIndex = index;
+                }
+            });
+            
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    currentIndex = (currentIndex + 1) % visibleResults.length;
+                    highlightSearchResult(visibleResults, currentIndex);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    currentIndex = currentIndex <= 0 ? visibleResults.length - 1 : currentIndex - 1;
+                    highlightSearchResult(visibleResults, currentIndex);
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (currentIndex >= 0 && currentIndex < visibleResults.length) {
+                        selectCountryFromSearch(visibleResults[currentIndex]);
+                    }
+                    break;
+                case 'Escape':
+                    hideSearchResults();
+                    document.getElementById('countrySearch').blur();
+                    break;
+            }
+        }
+        
+        // Search countries based on query
+        function searchCountries(query) {
+            if (!globalCountryData.length) {
+                // Initialize global country data if not already done
+                globalCountryData = getGlobalCountryList();
+            }
+            
+            return globalCountryData.filter(country => {
+                const name = country.name.toLowerCase();
+                const code = country.code.toLowerCase();
+                const region = country.region.toLowerCase();
+                
+                return name.includes(query) || 
+                       code.includes(query) || 
+                       region.includes(query);
+            }).slice(0, 10); // Limit to 10 results
+        }
+        
+        // Display search results
+        function displaySearchResults(results) {
+            const searchResults = document.getElementById('searchResults');
+            
+            if (!results.length) {
+                searchResults.innerHTML = '<div class="no-results">No countries found</div>';
+                searchResults.classList.add('show');
+                return;
+            }
+            
+            const resultsHTML = results.map((country, index) => `
+                <div class="search-result-item ${index === 0 ? 'highlighted' : ''}" 
+                     data-country="${country.name}" 
+                     data-code="${country.code}"
+                     onclick="selectCountryFromSearch(this)">
+                    <div class="country-flag">${country.flag}</div>
+                    <div class="country-name">${country.name}</div>
+                    <div class="country-code">${country.code}</div>
+                    <div class="country-region">${country.region}</div>
+                </div>
+            `).join('');
+            
+            searchResults.innerHTML = resultsHTML;
+            searchResults.classList.add('show');
+        }
+        
+        // Highlight search result
+        function highlightSearchResult(results, index) {
+            results.forEach((item, i) => {
+                item.classList.toggle('highlighted', i === index);
+            });
+        }
+        
+        // Hide search results
+        function hideSearchResults() {
+            const searchResults = document.getElementById('searchResults');
+            searchResults.classList.remove('show');
+        }
+        
+        // Select country from search
+        function selectCountryFromSearch(resultElement) {
+            const countryName = resultElement.dataset.country;
+            const countryCode = resultElement.dataset.code;
+            
+            // Clear search
+            document.getElementById('countrySearch').value = '';
+            hideSearchResults();
+            
+            // Find and select the country on the map
+            selectCountryOnMap(countryName, countryCode);
+        }
+        
+        // Select country on the map
+        function selectCountryOnMap(countryName, countryCode) {
+            // Clear previous selection
+            const allPaths = document.querySelectorAll('.world-map svg path');
+            allPaths.forEach(p => {
+                p.classList.remove('selected');
+                p.style.fill = '#90EE90';
+                const pCountry = p.getAttribute('data-country');
+                
+                if (pCountry === 'Morocco') {
+                    p.style.stroke = '#90EE90';
+                    p.style.strokeWidth = '0.1';
+                } else {
+                    p.style.stroke = '#228B22';
+                    p.style.strokeWidth = '0.8';
+                }
+            });
+            
+            // Find and select the target country
+            const targetPaths = document.querySelectorAll(`.world-map svg path[data-country="${countryName}"]`);
+            
+            if (targetPaths.length > 0) {
+                targetPaths.forEach(path => {
+                    path.classList.add('selected');
+                    path.style.fill = '#FF6B6B';
+                    path.style.stroke = '#DC143C';
+                    path.style.strokeWidth = '2.5';
+                });
+                
+                // Center the map on the selected country
+                centerMapOnCountry(countryName);
+                
+                // Fetch and display country data
+                fetchAndDisplayCountryData(countryName, countryCode);
+            } else {
+                // Country not found on map, show error
+                showCountryNotFoundError(countryName);
+            }
+        }
+        
+        // Center map on selected country
+        function centerMapOnCountry(countryName) {
+            // Simple centering logic - can be enhanced with actual country coordinates
+            const worldMap = document.querySelector('.world-map');
+            if (worldMap) {
+                // Reset map position to center
+                resetMap();
+                
+                // Add a subtle animation to highlight the selection
+                worldMap.style.transition = 'all 0.5s ease';
+                setTimeout(() => {
+                    worldMap.style.transition = '';
+                }, 500);
+            }
+        }
+        
+        // Fetch and display country data
+        async function fetchAndDisplayCountryData(countryName, countryCode) {
+            try {
+                const economicData = await fetchRealEconomicData(countryName, countryCode);
+                
+                const countryData = {
+                    name: countryName,
+                    code: countryCode,
+                    economicData
+                };
+                
+                updateDataPanel(countryData);
+                
+                // Show success message
+                showSearchSuccessMessage(countryName);
+                
+            } catch (error) {
+                console.error('Error fetching country data:', error);
+                showSearchErrorMessage(countryName);
+            }
+        }
+        
+        // Show country not found error
+        function showCountryNotFoundError(countryName) {
+            const dataPanel = document.getElementById('dataPanel');
+            dataPanel.innerHTML = `
+                <div class="data-header">
+                    <h2>Country Not Found</h2>
+                </div>
+                <div class="data-content">
+                    <div style="text-align: center; padding: 2rem; color: #718096;">
+                        <p>❌ Country "${countryName}" not found on the map</p>
+                        <p>This might be a territory, dependency, or the country name might be different.</p>
+                        <p>Try searching for a different country or browse the map directly.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Show search success message
+        function showSearchSuccessMessage(countryName) {
+            // Create a temporary success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.innerHTML = `✅ Found and selected ${countryName}`;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Show search error message
+        function showSearchErrorMessage(countryName) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
+                z-index: 10000;
+                animation: slideInRight 0.3s ease-out;
+            `;
+            notification.innerHTML = `❌ Error loading data for ${countryName}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease-in';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Get global country list for search
+        function getGlobalCountryList() {
+            return [
+                { name: 'United States', code: 'US', flag: '🇺🇸', region: 'North America' },
+                { name: 'China', code: 'CN', flag: '🇨🇳', region: 'Asia' },
+                { name: 'Japan', code: 'JP', flag: '🇯🇵', region: 'Asia' },
+                { name: 'Germany', code: 'DE', flag: '🇩🇪', region: 'Europe' },
+                { name: 'United Kingdom', code: 'GB', flag: '🇬🇧', region: 'Europe' },
+                { name: 'France', code: 'FR', flag: '🇫🇷', region: 'Europe' },
+                { name: 'India', code: 'IN', flag: '🇮🇳', region: 'Asia' },
+                { name: 'Italy', code: 'IT', flag: '🇮🇹', region: 'Europe' },
+                { name: 'Brazil', code: 'BR', flag: '🇧🇷', region: 'South America' },
+                { name: 'Canada', code: 'CA', flag: '🇨🇦', region: 'North America' },
+                { name: 'Russia', code: 'RU', flag: '🇷🇺', region: 'Europe/Asia' },
+                { name: 'South Korea', code: 'KR', flag: '🇰🇷', region: 'Asia' },
+                { name: 'Australia', code: 'AU', flag: '🇦🇺', region: 'Oceania' },
+                { name: 'Spain', code: 'ES', flag: '🇪🇸', region: 'Europe' },
+                { name: 'Mexico', code: 'MX', flag: '🇲🇽', region: 'North America' },
+                { name: 'Indonesia', code: 'ID', flag: '🇮🇩', region: 'Asia' },
+                { name: 'Netherlands', code: 'NL', flag: '🇳🇱', region: 'Europe' },
+                { name: 'Saudi Arabia', code: 'SA', flag: '🇸🇦', region: 'Middle East' },
+                { name: 'Turkey', code: 'TR', flag: '🇹🇷', region: 'Europe/Asia' },
+                { name: 'Switzerland', code: 'CH', flag: '🇨🇭', region: 'Europe' },
+                { name: 'Poland', code: 'PL', flag: '🇵🇱', region: 'Europe' },
+                { name: 'Sweden', code: 'SE', flag: '🇸🇪', region: 'Europe' },
+                { name: 'Belgium', code: 'BE', flag: '🇧🇪', region: 'Europe' },
+                { name: 'Norway', code: 'NO', flag: '🇳🇴', region: 'Europe' },
+                { name: 'Austria', code: 'AT', flag: '🇦🇹', region: 'Europe' },
+                { name: 'Denmark', code: 'DK', flag: '🇩🇰', region: 'Europe' },
+                { name: 'Singapore', code: 'SG', flag: '🇸🇬', region: 'Asia' },
+                { name: 'Israel', code: 'IL', flag: '🇮🇱', region: 'Middle East' },
+                { name: 'Finland', code: 'FI', flag: '🇫🇮', region: 'Europe' },
+                { name: 'Ireland', code: 'IE', flag: '🇮🇪', region: 'Europe' },
+                { name: 'New Zealand', code: 'NZ', flag: '🇳🇿', region: 'Oceania' },
+                { name: 'Portugal', code: 'PT', flag: '🇵🇹', region: 'Europe' },
+                { name: 'Greece', code: 'GR', flag: '🇬🇷', region: 'Europe' },
+                { name: 'Czech Republic', code: 'CZ', flag: '🇨🇿', region: 'Europe' },
+                { name: 'Hungary', code: 'HU', flag: '🇭🇺', region: 'Europe' },
+                { name: 'Romania', code: 'RO', flag: '🇷🇴', region: 'Europe' },
+                { name: 'Bulgaria', code: 'BG', flag: '🇧🇬', region: 'Europe' },
+                { name: 'Croatia', code: 'HR', flag: '🇭🇷', region: 'Europe' },
+                { name: 'Slovakia', code: 'SK', flag: '🇸🇰', region: 'Europe' },
+                { name: 'Slovenia', code: 'SI', flag: '🇸🇮', region: 'Europe' },
+                { name: 'Estonia', code: 'EE', flag: '🇪🇪', region: 'Europe' },
+                { name: 'Latvia', code: 'LV', flag: '🇱🇻', region: 'Europe' },
+                { name: 'Lithuania', code: 'LT', flag: '🇱🇹', region: 'Europe' },
+                { name: 'Luxembourg', code: 'LU', flag: '🇱🇺', region: 'Europe' },
+                { name: 'Malta', code: 'MT', flag: '🇲🇹', region: 'Europe' },
+                { name: 'Cyprus', code: 'CY', flag: '🇨🇾', region: 'Europe' },
+                { name: 'Morocco', code: 'MA', flag: '🇲🇦', region: 'Africa' },
+                { name: 'Egypt', code: 'EG', flag: '🇪🇬', region: 'Africa' },
+                { name: 'Nigeria', code: 'NG', flag: '🇳🇬', region: 'Africa' },
+                { name: 'South Africa', code: 'ZA', flag: '🇿🇦', region: 'Africa' },
+                { name: 'Kenya', code: 'KE', flag: '🇰🇪', region: 'Africa' },
+                { name: 'Ethiopia', code: 'ET', flag: '🇪🇹', region: 'Africa' },
+                { name: 'Ghana', code: 'GH', flag: '🇬🇭', region: 'Africa' },
+                { name: 'Tanzania', code: 'TZ', flag: '🇹🇿', region: 'Africa' },
+                { name: 'Uganda', code: 'UG', flag: '🇺🇬', region: 'Africa' },
+                { name: 'Algeria', code: 'DZ', flag: '🇩🇿', region: 'Africa' },
+                { name: 'Tunisia', code: 'TN', flag: '🇹🇳', region: 'Africa' },
+                { name: 'Libya', code: 'LY', flag: '🇱🇾', region: 'Africa' },
+                { name: 'Sudan', code: 'SD', flag: '🇸🇩', region: 'Africa' },
+                { name: 'Chad', code: 'TD', flag: '🇹🇩', region: 'Africa' },
+                { name: 'Niger', code: 'NE', flag: '🇳🇪', region: 'Africa' },
+                { name: 'Mali', code: 'ML', flag: '🇲🇱', region: 'Africa' },
+                { name: 'Burkina Faso', code: 'BF', flag: '🇧🇫', region: 'Africa' },
+                { name: 'Senegal', code: 'SN', flag: '🇸🇳', region: 'Africa' },
+                { name: 'Guinea', code: 'GN', flag: '🇬🇳', region: 'Africa' },
+                { name: 'Sierra Leone', code: 'SL', flag: '🇸🇱', region: 'Africa' },
+                { name: 'Liberia', code: 'LR', flag: '🇱🇷', region: 'Africa' },
+                { name: 'Ivory Coast', code: 'CI', flag: '🇨🇮', region: 'Africa' },
+                { name: 'Guinea-Bissau', code: 'GW', flag: '🇬🇼', region: 'Africa' },
+                { name: 'Cape Verde', code: 'CV', flag: '🇨🇻', region: 'Africa' },
+                { name: 'Gambia', code: 'GM', flag: '🇬🇲', region: 'Africa' },
+                { name: 'Mauritania', code: 'MR', flag: '🇲🇷', region: 'Africa' },
+                { name: 'Thailand', code: 'TH', flag: '🇹🇭', region: 'Asia' },
+                { name: 'Vietnam', code: 'VN', flag: '🇻🇳', region: 'Asia' },
+                { name: 'Malaysia', code: 'MY', flag: '🇲🇾', region: 'Asia' },
+                { name: 'Philippines', code: 'PH', flag: '🇵🇭', region: 'Asia' },
+                { name: 'Myanmar', code: 'MM', flag: '🇲🇲', region: 'Asia' },
+                { name: 'Cambodia', code: 'KH', flag: '🇰🇭', region: 'Asia' },
+                { name: 'Laos', code: 'LA', flag: '🇱🇦', region: 'Asia' },
+                { name: 'Brunei', code: 'BN', flag: '🇧🇳', region: 'Asia' },
+                { name: 'East Timor', code: 'TL', flag: '🇹🇱', region: 'Asia' },
+                { name: 'Mongolia', code: 'MN', flag: '🇲🇳', region: 'Asia' },
+                { name: 'Kazakhstan', code: 'KZ', flag: '🇰🇿', region: 'Asia' },
+                { name: 'Uzbekistan', code: 'UZ', flag: '🇺🇿', region: 'Asia' },
+                { name: 'Kyrgyzstan', code: 'KG', flag: '🇰🇬', region: 'Asia' },
+                { name: 'Tajikistan', code: 'TJ', flag: '🇹🇯', region: 'Asia' },
+                { name: 'Turkmenistan', code: 'TM', flag: '🇹🇲', region: 'Asia' },
+                { name: 'Afghanistan', code: 'AF', flag: '🇦🇫', region: 'Asia' },
+                { name: 'Pakistan', code: 'PK', flag: '🇵🇰', region: 'Asia' },
+                { name: 'Bangladesh', code: 'BD', flag: '🇧🇩', region: 'Asia' },
+                { name: 'Sri Lanka', code: 'LK', flag: '🇱🇰', region: 'Asia' },
+                { name: 'Nepal', code: 'NP', flag: '🇳🇵', region: 'Asia' },
+                { name: 'Bhutan', code: 'BT', flag: '🇧🇹', region: 'Asia' },
+                { name: 'Maldives', code: 'MV', flag: '🇲🇻', region: 'Asia' },
+                { name: 'Iran', code: 'IR', flag: '🇮🇷', region: 'Middle East' },
+                { name: 'Iraq', code: 'IQ', flag: '🇮🇶', region: 'Middle East' },
+                { name: 'Syria', code: 'SY', flag: '🇸🇾', region: 'Middle East' },
+                { name: 'Lebanon', code: 'LB', flag: '🇱🇧', region: 'Middle East' },
+                { name: 'Jordan', code: 'JO', flag: '🇯🇴', region: 'Middle East' },
+                { name: 'Palestine', code: 'PS', flag: '🇵🇸', region: 'Middle East' },
+                { name: 'Yemen', code: 'YE', flag: '🇾🇪', region: 'Middle East' },
+                { name: 'Oman', code: 'OM', flag: '🇴🇲', region: 'Middle East' },
+                { name: 'Qatar', code: 'QA', flag: '🇶🇦', region: 'Middle East' },
+                { name: 'Bahrain', code: 'BH', flag: '🇧🇭', region: 'Middle East' },
+                { name: 'Kuwait', code: 'KW', flag: '🇰🇼', region: 'Middle East' },
+                { name: 'United Arab Emirates', code: 'AE', flag: '🇦🇪', region: 'Middle East' },
+                { name: 'Armenia', code: 'AM', flag: '🇦🇲', region: 'Asia' },
+                { name: 'Azerbaijan', code: 'AZ', flag: '🇦🇿', region: 'Asia' },
+                { name: 'Georgia', code: 'GE', flag: '🇬🇪', region: 'Asia' },
+                { name: 'Ukraine', code: 'UA', flag: '🇺🇦', region: 'Europe' },
+                { name: 'Belarus', code: 'BY', flag: '🇧🇾', region: 'Europe' },
+                { name: 'Moldova', code: 'MD', flag: '🇲🇩', region: 'Europe' },
+                { name: 'Albania', code: 'AL', flag: '🇦🇱', region: 'Europe' },
+                { name: 'North Macedonia', code: 'MK', flag: '🇲🇰', region: 'Europe' },
+                { name: 'Kosovo', code: 'XK', flag: '🇽🇰', region: 'Europe' },
+                { name: 'Serbia', code: 'RS', flag: '🇷🇸', region: 'Europe' },
+                { name: 'Montenegro', code: 'ME', flag: '🇲🇪', region: 'Europe' },
+                { name: 'Bosnia and Herzegovina', code: 'BA', flag: '🇧🇦', region: 'Europe' },
+                { name: 'Iceland', code: 'IS', flag: '🇮🇸', region: 'Europe' },
+                { name: 'Greenland', code: 'GL', flag: '🇬🇱', region: 'North America' },
+                { name: 'Fiji', code: 'FJ', flag: '🇫🇯', region: 'Oceania' },
+                { name: 'Papua New Guinea', code: 'PG', flag: '🇵🇬', region: 'Oceania' },
+                { name: 'Solomon Islands', code: 'SB', flag: '🇸🇧', region: 'Oceania' },
+                { name: 'Vanuatu', code: 'VU', flag: '🇻🇺', region: 'Oceania' },
+                { name: 'New Caledonia', code: 'NC', flag: '🇳🇨', region: 'Oceania' },
+                { name: 'French Polynesia', code: 'PF', flag: '🇵🇫', region: 'Oceania' },
+                { name: 'Samoa', code: 'WS', flag: '🇼🇸', region: 'Oceania' },
+                { name: 'Tonga', code: 'TO', flag: '🇹🇴', region: 'Oceania' },
+                { name: 'Kiribati', code: 'KI', flag: '🇰🇮', region: 'Oceania' },
+                { name: 'Tuvalu', code: 'TV', flag: '🇹🇻', region: 'Oceania' },
+                { name: 'Nauru', code: 'NR', flag: '🇳🇷', region: 'Oceania' },
+                { name: 'Palau', code: 'PW', flag: '🇵🇼', region: 'Oceania' },
+                { name: 'Marshall Islands', code: 'MH', flag: '🇲🇭', region: 'Oceania' },
+                { name: 'Micronesia', code: 'FM', flag: '🇫🇲', region: 'Oceania' },
+                { name: 'Northern Mariana Islands', code: 'MP', flag: '🇲🇵', region: 'Oceania' },
+                { name: 'Guam', code: 'GU', flag: '🇬🇺', region: 'Oceania' },
+                { name: 'American Samoa', code: 'AS', flag: '🇦🇸', region: 'Oceania' },
+                { name: 'Cook Islands', code: 'CK', flag: '🇨🇰', region: 'Oceania' },
+                { name: 'Niue', code: 'NU', flag: '🇳🇺', region: 'Oceania' },
+                { name: 'Tokelau', code: 'TK', flag: '🇹🇰', region: 'Oceania' },
+                { name: 'Pitcairn Islands', code: 'PN', flag: '🇵🇳', region: 'Oceania' },
+                { name: 'Wallis and Futuna', code: 'WF', flag: '🇼🇫', region: 'Oceania' },
+                { name: 'French Guiana', code: 'GF', flag: '🇬🇫', region: 'South America' },
+                { name: 'Suriname', code: 'SR', flag: '🇸🇷', region: 'South America' },
+                { name: 'Guyana', code: 'GY', flag: '🇬🇾', region: 'South America' },
+                { name: 'Venezuela', code: 'VE', flag: '🇻🇪', region: 'South America' },
+                { name: 'Colombia', code: 'CO', flag: '🇨🇴', region: 'South America' },
+                { name: 'Ecuador', code: 'EC', flag: '🇪🇨', region: 'South America' },
+                { name: 'Peru', code: 'PE', flag: '🇵🇪', region: 'South America' },
+                { name: 'Chile', code: 'CL', flag: '🇨🇱', region: 'South America' },
+                { name: 'Paraguay', code: 'PY', flag: '🇵🇾', region: 'South America' },
+                { name: 'Uruguay', code: 'UY', flag: '🇺🇾', region: 'South America' },
+                { name: 'Bolivia', code: 'BO', flag: '🇧🇴', region: 'South America' },
+                { name: 'Cuba', code: 'CU', flag: '🇨🇺', region: 'North America' },
+                { name: 'Jamaica', code: 'JM', flag: '🇯🇲', region: 'North America' },
+                { name: 'Haiti', code: 'HT', flag: '🇭🇹', region: 'North America' },
+                { name: 'Dominican Republic', code: 'DO', flag: '🇩🇴', region: 'North America' },
+                { name: 'Puerto Rico', code: 'PR', flag: '🇵🇷', region: 'North America' },
+                { name: 'Bahamas', code: 'BS', flag: '🇧🇸', region: 'North America' },
+                { name: 'Barbados', code: 'BB', flag: '🇧🇧', region: 'North America' },
+                { name: 'Trinidad and Tobago', code: 'TT', flag: '🇹🇹', region: 'North America' },
+                { name: 'Grenada', code: 'GD', flag: '🇬🇩', region: 'North America' },
+                { name: 'Saint Vincent and the Grenadines', code: 'VC', flag: '🇻🇨', region: 'North America' },
+                { name: 'Saint Lucia', code: 'LC', flag: '🇱🇨', region: 'North America' },
+                { name: 'Dominica', code: 'DM', flag: '🇩🇲', region: 'North America' },
+                { name: 'Saint Kitts and Nevis', code: 'KN', flag: '🇰🇳', region: 'North America' },
+                { name: 'Antigua and Barbuda', code: 'AG', flag: '🇦🇬', region: 'North America' },
+                { name: 'Belize', code: 'BZ', flag: '🇧🇿', region: 'North America' },
+                { name: 'Guatemala', code: 'GT', flag: '🇬🇹', region: 'North America' },
+                { name: 'El Salvador', code: 'SV', flag: '🇸🇻', region: 'North America' },
+                { name: 'Honduras', code: 'HN', flag: '🇭🇳', region: 'North America' },
+                { name: 'Nicaragua', code: 'NI', flag: '🇳🇮', region: 'North America' },
+                { name: 'Costa Rica', code: 'CR', flag: '🇨🇷', region: 'North America' },
+                { name: 'Panama', code: 'PA', flag: '🇵🇦', region: 'North America' },
+                { name: 'Honduras', code: 'HN', flag: '🇭🇳', region: 'North America' },
+                { name: 'Nicaragua', code: 'NI', flag: '🇳🇮', region: 'North America' },
+                { name: 'Costa Rica', code: 'CR', flag: '🇨🇷', region: 'North America' },
+                { name: 'Panama', code: 'PA', flag: '🇵🇦', region: 'North America' },
+                { name: 'Cuba', code: 'CU', flag: '🇨🇺', region: 'North America' },
+                { name: 'Jamaica', code: 'JM', flag: '🇯🇲', region: 'North America' },
+                { name: 'Haiti', code: 'HT', flag: '🇭🇹', region: 'North America' },
+                { name: 'Dominican Republic', code: 'DO', flag: '🇩🇴', region: 'North America' },
+                { name: 'Puerto Rico', code: 'PR', flag: '🇵🇷', region: 'North America' },
+                { name: 'Bahamas', code: 'BS', flag: '🇧🇸', region: 'North America' },
+                { name: 'Barbados', code: 'BB', flag: '🇧🇧', region: 'North America' },
+                { name: 'Trinidad and Tobago', code: 'TT', flag: '🇹🇹', region: 'North America' },
+                { name: 'Grenada', code: 'GD', flag: '🇬🇩', region: 'North America' },
+                { name: 'Saint Vincent and the Grenadines', code: 'VC', flag: '🇻🇨', region: 'North America' },
+                { name: 'Saint Lucia', code: 'LC', flag: '🇱🇨', region: 'North America' },
+                { name: 'Dominica', code: 'DM', flag: '🇩🇲', region: 'North America' },
+                { name: 'Saint Kitts and Nevis', code: 'KN', flag: '🇰🇳', region: 'North America' },
+                { name: 'Antigua and Barbuda', code: 'AG', flag: '🇦🇬', region: 'North America' },
+                { name: 'Belize', code: 'BZ', flag: '🇧🇿', region: 'North America' },
+                { name: 'Guatemala', code: 'GT', flag: '🇬🇹', region: 'North America' },
+                { name: 'El Salvador', code: 'SV', flag: '🇸🇻', region: 'North America' },
+                { name: 'Honduras', code: 'HN', flag: '🇭🇳', region: 'North America' },
+                { name: 'Nicaragua', code: 'NI', flag: '🇳🇮', region: 'North America' },
+                { name: 'Costa Rica', code: 'CR', flag: '🇨🇷', region: 'North America' },
+                { name: 'Panama', code: 'PA', flag: '🇵🇦', region: 'North America' }
+            ];
+        }
+        
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
         
 
         function createSimplifiedMap() {
@@ -5435,6 +6108,7 @@
             updateDataPanel(null); // Initialize empty data panel
             initNavigation(); // Initialize navigation system
             populateCountryDropdowns(); // Populate country comparison dropdowns
+            initCountrySearch(); // Initialize country search functionality
         });
         window.addEventListener('resize', initWorldMap);
     </script>
