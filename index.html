@@ -6,8 +6,11 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="theme-color" content="#1e3c72">
+    <meta name="theme-color" content="#3b82f6">
     <title>World Data Map</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         * {
@@ -17,13 +20,13 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-                sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f8fafc;
             min-height: 100vh;
+            color: #1a202c;
+            line-height: 1.6;
         }
 
         .app {
@@ -33,146 +36,196 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
-            color: white;
-            padding: 3rem 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
+            background: #f1f5f9;
+            color: #1a202c;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
             top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-            opacity: 0.3;
+            z-index: 1000;
         }
 
         .header-content {
-            position: relative;
-            z-index: 1;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 2rem;
         }
 
         .header h1 {
-            color: white;
-            font-size: 3.5rem;
-            font-weight: 800;
+            color: #1a202c;
+            font-size: 2rem;
+            font-weight: 600;
             text-align: center;
             margin: 0;
-            background: linear-gradient(45deg, #ffffff, #e0e7ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
 
         .header p {
-            color: rgba(255, 255, 255, 0.95);
+            color: #64748b;
             text-align: center;
             margin-top: 1rem;
-            font-size: 1.3rem;
-            font-weight: 300;
-            letter-spacing: 0.5px;
+            font-size: 1.125rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .header-stats {
+            display: flex !important;
+            justify-content: center !important;
+            gap: 1rem !important;
+            margin-top: 1rem !important;
+            flex-wrap: nowrap !important;
+            flex-direction: row !important;
+            align-items: center !important;
+        }
+
+        /* Navigation Styles */
+        .navigation {
+            background: #e2e8f0;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .nav-menu {
             display: flex;
-            justify-content: center;
-            gap: 3rem;
-            margin-top: 2rem;
-            flex-wrap: wrap;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 0;
+        }
+
+        .nav-item {
+            margin: 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1rem 1.5rem;
+            color: #475569;
+            text-decoration: none;
+            font-weight: 500;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            color: #1e40af;
+            background: #f1f5f9;
+        }
+
+        .nav-item.active .nav-link {
+            color: #1e40af;
+            border-bottom-color: #1e40af;
+            background: #f1f5f9;
+        }
+
+        .nav-icon {
+            font-size: 1.125rem;
         }
 
         .stat-item {
             text-align: center;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 0.5rem !important;
+            background: #f1f5f9 !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            min-width: 80px !important;
+            flex: 1 !important;
+            max-width: 100px !important;
+            display: inline-block !important;
+            float: none !important;
+            clear: none !important;
         }
 
         .stat-number {
-            display: block;
-            font-size: 2rem;
-            font-weight: 700;
-            color: #fbbf24;
+            display: block !important;
+            font-size: 1.25rem !important;
+            font-weight: 700 !important;
+            color: #1e40af !important;
+            margin-bottom: 0.25rem !important;
         }
 
         .stat-label {
-            display: block;
-            font-size: 0.9rem;
-            opacity: 0.8;
-            margin-top: 0.25rem;
+            display: block !important;
+            font-size: 0.75rem !important;
+            color: #475569 !important;
+            font-weight: 500 !important;
+        }
+        
+        /* Force horizontal layout */
+        .header-stats > * {
+            display: inline-block !important;
+            vertical-align: top !important;
         }
 
         .main-content {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 2rem;
-            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
         }
 
         .map-container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            position: relative;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #cbd5e1;
         }
 
         .map-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1.5rem;
             text-align: center;
+            margin-bottom: 1.5rem;
         }
 
         .map-header h2 {
             font-size: 1.5rem;
             font-weight: 600;
+            color: #1a202c;
             margin-bottom: 0.5rem;
         }
 
         .map-header p {
-            opacity: 0.9;
-            font-size: 0.95rem;
+            color: #64748b;
+            font-size: 1rem;
         }
 
         .world-map {
-            width: 100%;
             height: 600px;
-            background: #f7fafc;
+            background: #f8fafc;
+            border-radius: 8px;
             position: relative;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
         }
 
         .country {
-            fill: #90EE90;
-            stroke: #228B22;
-            stroke-width: 0.8;
+            fill: #e0f2fe;
+            stroke: #0ea5e9;
+            stroke-width: 0.5;
             cursor: pointer;
-            transition: all 0.3s ease;
-            filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.1));
+            transition: fill 0.2s ease;
         }
 
         .country:hover {
-            fill: #98FB98;
-            stroke: #32CD32;
-            stroke-width: 1.2;
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.2));
+            fill: #bae6fd;
         }
 
         .country.selected {
-            fill: #FF6B6B;
-            stroke: #DC143C;
-            stroke-width: 2.5;
-            filter: drop-shadow(3px 3px 6px rgba(0,0,0,0.3));
+            fill: #fecaca;
+            stroke: #ef4444;
+            stroke-width: 2;
         }
 
         .country-tooltip {
@@ -188,34 +241,34 @@
         }
 
         .data-panel {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border: 1px solid #cbd5e1;
         }
 
         .data-header {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-            color: white;
-            padding: 1.5rem;
             text-align: center;
+            margin-bottom: 1.5rem;
         }
 
         .data-header h2 {
             font-size: 1.5rem;
             font-weight: 600;
+            color: #1a202c;
             margin-bottom: 0.5rem;
         }
 
         .data-content {
-            padding: 2rem;
+            padding: 0;
         }
 
         .no-selection {
             text-align: center;
-            color: #718096;
-            font-size: 1.1rem;
+            color: #64748b;
+            font-size: 1.125rem;
             padding: 3rem 1rem;
+            font-weight: 400;
         }
 
         .country-info {
@@ -223,30 +276,31 @@
         }
 
         .country-name {
-            font-size: 1.75rem;
-            font-weight: 700;
-            color: #2d3748;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1a202c;
             margin-bottom: 1rem;
             text-align: center;
+            letter-spacing: -0.025em;
         }
 
         .data-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 1.5rem;
             margin-top: 1.5rem;
         }
 
         .data-card {
-            background: #f7fafc;
-            border-radius: 12px;
+            background: #f1f5f9;
+            border-radius: 8px;
             padding: 1.5rem;
-            border: 1px solid #e2e8f0;
+            border: 1px solid #cbd5e1;
         }
 
         .data-card h3 {
-            color: #4a5568;
-            font-size: 1.1rem;
+            color: #1a202c;
+            font-size: 1.25rem;
             font-weight: 600;
             margin-bottom: 1rem;
             display: flex;
@@ -267,17 +321,19 @@
         }
 
         .data-table th {
-            background: #edf2f7;
+            background: #e2e8f0;
             font-weight: 600;
-            color: #4a5568;
+            color: #475569;
+            font-size: 0.875rem;
         }
 
         .data-table td {
-            color: #2d3748;
+            color: #1a202c;
+            font-size: 0.875rem;
         }
 
         .data-table tr:hover {
-            background: #f7fafc;
+            background: #e2e8f0;
         }
 
         .loading {
@@ -285,7 +341,8 @@
             justify-content: center;
             align-items: center;
             padding: 3rem;
-            color: #718096;
+            color: #64748b;
+            font-weight: 400;
         }
 
         @media (max-width: 768px) {
@@ -400,6 +457,14 @@
             100% { transform: rotate(360deg); }
         }
 
+
+
+
+
+
+
+
+
         .icon {
             width: 20px;
             height: 20px;
@@ -427,11 +492,16 @@
              background: #f8fafc;
          }
 
-         .section-header h3 {
-             margin: 0 0 0.5rem 0;
-             color: #2d3748;
-             font-size: 1.2rem;
-         }
+                 .section-header h3 {
+            margin: 0 0 1rem 0;
+            color: #1e40af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
+        }
 
          .visualization-note {
              font-size: 0.85rem;
@@ -477,19 +547,12 @@
              font-size: 0.9rem;
          }
 
-         .visualization-section {
-             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-             color: white;
-             border: none;
-         }
-
-         .visualization-section .section-header h3 {
-             color: white;
-         }
-
-         .visualization-section .visualization-note {
-             color: rgba(255, 255, 255, 0.8);
-         }
+                 .visualization-section {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
 
          .chart-grid {
              display: grid;
@@ -499,15 +562,15 @@
          }
 
          .chart-card {
-             background: rgba(255, 255, 255, 0.1);
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
              border-radius: 12px;
              padding: 1rem;
-             backdrop-filter: blur(10px);
          }
 
          .chart-card h4 {
              margin: 0 0 1rem 0;
-             color: white;
+             color: #1e40af;
              font-size: 1rem;
              text-align: center;
          }
@@ -547,44 +610,17 @@
          }
 
          .analytics-section {
-             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-             color: white;
-             border: none;
-         }
-
-         .analytics-section .section-header h3,
-         .analytics-section .visualization-note {
-             color: white;
-         }
-
-         .analytics-section .indicator-item {
-             background-color: rgba(0, 0, 0, 0.2) !important;
-             padding: 0.75rem !important;
-             border-radius: 8px !important;
-             border: 1px solid rgba(255, 255, 255, 0.2) !important;
-         }
-
-         .analytics-section .indicator-label {
-             color: #ffffff !important;
-             font-weight: 600 !important;
-             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5) !important;
-         }
-
-         .analytics-section .indicator-value {
-             color: #fbbf24 !important;
-             font-weight: 700 !important;
-             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7) !important;
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
+             border-radius: 12px;
+             padding: 1.5rem;
          }
 
          .forecasting-section {
-             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-             color: white;
-             border: none;
-         }
-
-         .forecasting-section .section-header h3,
-         .forecasting-section .visualization-note {
-             color: white;
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
+             border-radius: 12px;
+             padding: 1.5rem;
          }
 
          .forecast-grid {
@@ -595,16 +631,15 @@
          }
 
          .forecast-card {
-             background: rgba(255, 255, 255, 0.1);
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
              border-radius: 12px;
              padding: 1.5rem;
-             backdrop-filter: blur(10px);
-             border: 1px solid rgba(255, 255, 255, 0.2);
          }
 
          .forecast-card h4 {
              margin: 0 0 1rem 0;
-             color: white;
+             color: #1e40af;
              font-size: 1.1rem;
              text-align: center;
          }
@@ -617,7 +652,7 @@
          .forecast-year {
              display: block;
              font-size: 0.9rem;
-             opacity: 0.8;
+             color: #475569;
              margin-bottom: 0.5rem;
          }
 
@@ -625,22 +660,23 @@
              display: block;
              font-size: 1.5rem;
              font-weight: 700;
-             color: #fbbf24;
+             color: #1e40af;
              margin-bottom: 0.25rem;
          }
 
          .forecast-range {
              display: block;
              font-size: 0.85rem;
-             opacity: 0.7;
+             color: #64748b;
          }
 
          .forecast-trend {
              text-align: center;
              font-size: 0.9rem;
              padding: 0.5rem;
-             background: rgba(255, 255, 255, 0.1);
+             background: #e2e8f0;
              border-radius: 6px;
+             color: #475569;
          }
 
          .forecast-methodology {
@@ -657,16 +693,18 @@
          }
 
          .calculation-formulas {
-             background: rgba(255, 255, 255, 0.1);
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
              border-radius: 8px;
              padding: 1.5rem;
              margin-bottom: 2rem;
-             backdrop-filter: blur(5px);
          }
 
          .calculation-formulas h4 {
              margin: 0 0 1rem 0;
-             color: white;
+             color: #1e40af;
+             font-size: 1.25rem;
+             font-weight: 600;
          }
 
          .formula-grid {
@@ -676,11 +714,12 @@
          }
 
          .formula-item {
-             background: rgba(255, 255, 255, 0.1);
+             background: #e2e8f0;
              border-radius: 6px;
              padding: 0.75rem;
              font-size: 0.9rem;
-             border: 1px solid rgba(255, 255, 255, 0.2);
+             border: 1px solid #cbd5e1;
+             color: #475569;
          }
 
          .yearly-forecasts {
@@ -688,18 +727,19 @@
          }
 
          .forecast-table-container {
-             background: rgba(255, 255, 255, 0.1);
+             background: #f1f5f9;
+             border: 1px solid #cbd5e1;
              border-radius: 12px;
              padding: 1.5rem;
              margin-bottom: 1.5rem;
-             backdrop-filter: blur(10px);
-             border: 1px solid rgba(255, 255, 255, 0.2);
          }
 
          .forecast-table-container h4 {
              margin: 0 0 1rem 0;
-             color: white;
+             color: #1e40af;
              text-align: center;
+             font-size: 1.25rem;
+             font-weight: 600;
          }
 
          .forecast-table {
@@ -718,21 +758,21 @@
          }
 
          .forecast-table th {
-             background: rgba(255, 255, 255, 0.1);
+             background: #e2e8f0;
              font-weight: 600;
-             color: #fbbf24;
+             color: #475569;
              text-transform: uppercase;
              font-size: 0.8rem;
              letter-spacing: 0.5px;
          }
 
          .forecast-table td {
-             color: white;
+             color: #1a202c;
              font-size: 0.9rem;
          }
 
          .forecast-table tr:hover {
-             background: rgba(255, 255, 255, 0.05);
+             background: #e2e8f0;
          }
 
          .forecast-table .trend-up {
@@ -884,29 +924,27 @@
          }
 
          .lang-btn {
-             background: rgba(255, 255, 255, 0.1);
-             border: 1px solid rgba(255, 255, 255, 0.2);
-             color: white;
              padding: 0.5rem 1rem;
+             border: 1px solid #cbd5e1;
+             background: #f1f5f9;
+             color: #475569;
              border-radius: 6px;
              cursor: pointer;
-             font-size: 0.9rem;
              font-weight: 500;
-             transition: all 0.3s ease;
-             backdrop-filter: blur(10px);
+             transition: all 0.2s ease;
+             font-size: 0.875rem;
+             margin-left: 0.5rem;
          }
 
          .lang-btn:hover {
-             background: rgba(255, 255, 255, 0.2);
-             border-color: rgba(255, 255, 255, 0.4);
-             transform: translateY(-1px);
+             background: #e2e8f0;
+             border-color: #94a3b8;
          }
 
          .lang-btn.active {
-             background: #fbbf24;
-             border-color: #fbbf24;
-             color: #1e293b;
-             font-weight: 600;
+             background: #3b82f6;
+             color: white;
+             border-color: #3b82f6;
          }
 
          /* Mobile Optimizations */
@@ -924,8 +962,10 @@
              }
              
              .header-stats {
-                 grid-template-columns: repeat(2, 1fr);
-                 gap: 1rem;
+                 display: flex !important;
+                 flex-direction: row !important;
+                 flex-wrap: nowrap !important;
+                 gap: 0.5rem !important;
              }
              
              .stat-item {
@@ -1079,8 +1119,10 @@
              }
              
              .header-stats {
-                 grid-template-columns: 1fr;
-                 gap: 0.75rem;
+                 display: flex !important;
+                 flex-direction: row !important;
+                 flex-wrap: nowrap !important;
+                 gap: 0.5rem !important;
              }
              
              .stat-item {
@@ -1444,6 +1486,711 @@
         .mobile-device .data-table {
             min-width: 500px;
         }
+
+        /* Basic Indicator Section Styles */
+        .indicator-section {
+            margin-bottom: 2rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            background: #f1f5f9;
+        }
+
+        .section-header h3 {
+            margin: 0 0 1rem 0;
+            color: #1e40af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
+        }
+
+        .visualization-note {
+            font-size: 0.875rem;
+            color: #1a202c;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background: #e2e8f0;
+            border-radius: 6px;
+            border-left: 3px solid #1e40af;
+        }
+
+        .current-indicators {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .indicator-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: #e2e8f0;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .indicator-label {
+            font-weight: 500;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        .indicator-value {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #1a202c;
+        }
+
+        /* Basic Forecast Styles */
+        .forecast-table-container {
+            margin-bottom: 1.5rem;
+        }
+
+        .forecast-table-container h4 {
+            color: #1a202c;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .forecast-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .forecast-table th,
+        .forecast-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .forecast-table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        .forecast-table td {
+            color: #1a202c;
+            font-size: 0.875rem;
+        }
+
+        .forecast-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .forecast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .forecast-card {
+            background: #ffffff;
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .forecast-card h4 {
+            color: #1a202c;
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .forecast-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .forecast-year {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .forecast-main {
+            color: #3b82f6;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .forecast-trend {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-style: italic;
+        }
+
+        .forecast-methodology {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1.5rem;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .forecast-methodology p {
+            color: #475569;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .forecast-methodology strong {
+            color: #1a202c;
+            font-weight: 600;
+        }
+
+        /* Basic Top 5 Rankings */
+        .top5-rankings {
+            background: #3b82f6;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .top5-rankings strong {
+            color: #fbbf24;
+            font-weight: 600;
+        }
+
+        /* Basic Data Legend */
+        .data-legend {
+            background: #e2e8f0;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin: 0.75rem 0;
+            font-size: 0.875rem;
+            color: #1a202c;
+        }
+
+        .data-legend span {
+            margin-right: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .data-legend .real-data {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .data-legend .projections {
+            background: #e0e7ff;
+            color: #3730a3;
+        }
+
+        .data-legend .not-available {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Page System */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem 0;
+        }
+
+        .page-header h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        /* Data Explorer Styles */
+        .data-categories {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .category-card {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .category-card h3 {
+            color: #1a202c;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .category-card p {
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .explore-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .explore-btn:hover {
+            background: #2563eb;
+        }
+
+        /* Forecasts Page Styles */
+        .forecast-overview {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .forecast-intro {
+            background: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            border-left: 3px solid #1e40af;
+        }
+
+        .forecast-intro h3 {
+            color: #1a202c;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .forecast-intro p {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .forecast-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric-card {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .metric-card h4 {
+            color: #1a202c;
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-card p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Comparisons Page Styles */
+        .comparison-tools {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .comparison-selector {
+            background: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .comparison-selector h3 {
+            color: #1a202c;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .country-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .country-select {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f1f5f9;
+        }
+
+        .compare-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .compare-btn:hover {
+            background: #2563eb;
+        }
+
+        .comparison-results {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            min-height: 200px;
+        }
+
+        .comparison-results p {
+            color: #64748b;
+            text-align: center;
+            margin: 0;
+        }
+
+        /* About Page Styles */
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .about-section {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .about-section h3 {
+            color: #1a202c;
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .about-section p {
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 0.75rem;
+        }
+
+        .about-section ul {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .about-section li {
+            margin-bottom: 0.5rem;
+        }
+
+
+
+
+
+
+
+        /* Basic Mobile Styles */
+        @media (max-width: 768px) {
+            /* Improve touch interactions */
+            .world-map {
+                touch-action: pan-x pan-y;
+                -webkit-touch-callout: none;
+                -webkit-user-select: none;
+                -khtml-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
+            }
+            
+            .world-map path {
+                touch-action: manipulation;
+                cursor: pointer;
+            }
+            
+            /* Mobile zoom controls */
+            .mobile-zoom .zoom-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 18px;
+                border-radius: 22px;
+            }
+            
+            /* Mobile data panel layout */
+            .data-panel {
+                margin: 0.5rem;
+                padding: 0.75rem;
+                max-height: 60vh;
+                overflow-y: auto;
+                position: relative;
+                z-index: 1000;
+            }
+            
+            /* Mobile header stats */
+            .header-stats {
+                gap: 0.5rem;
+                margin-top: 0.75rem;
+            }
+            
+            .stat-item {
+                padding: 0.375rem;
+                min-width: 60px;
+                max-width: 80px;
+            }
+            
+            .stat-number {
+                font-size: 1rem;
+                margin-bottom: 0.125rem;
+            }
+            
+            .stat-label {
+                font-size: 0.625rem;
+            }
+            
+            /* Mobile map container */
+            .map-container {
+                height: 40vh;
+                min-height: 300px;
+            }
+            
+            /* Mobile world map */
+            .world-map {
+                height: 100%;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            /* Mobile SVG optimization */
+            .world-map svg {
+                width: 100%;
+                height: 100%;
+                touch-action: manipulation;
+            }
+            
+            /* Mobile country paths */
+            .world-map path {
+                touch-action: manipulation;
+                cursor: pointer;
+                min-width: 20px;
+                min-height: 20px;
+            }
+            
+            /* Mobile navigation improvements */
+            .navigation {
+                padding: 0.5rem;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .nav-menu {
+                gap: 0.5rem;
+                padding: 0 0.5rem;
+            }
+            
+            .nav-link {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.875rem;
+                white-space: nowrap;
+            }
+            
+            /* Mobile page layout */
+            .page {
+                padding: 0.5rem;
+            }
+            
+            /* Mobile category cards */
+            .category-card {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+            
+            .category-card h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .category-card p {
+                font-size: 0.875rem;
+                line-height: 1.4;
+            }
+            
+            .data-header h2 {
+                font-size: 1.25rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .data-header p {
+                font-size: 0.8rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Mobile indicator sections */
+            .indicator-section {
+                margin-bottom: 1rem;
+                padding: 0.75rem;
+            }
+            
+            .section-header h3 {
+                font-size: 1.1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .visualization-note {
+                font-size: 0.75rem;
+                padding: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Mobile current indicators */
+            .current-indicators {
+                grid-template-columns: 1fr;
+                gap: 0.5rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .indicator-item {
+                padding: 0.5rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+            
+            .indicator-label {
+                font-size: 0.75rem;
+                font-weight: 600;
+            }
+            
+            .indicator-value {
+                font-size: 0.875rem;
+                font-weight: 700;
+            }
+            
+            /* Mobile forecast tables */
+            .forecast-table-container {
+                padding: 0.75rem;
+                margin-bottom: 0.75rem;
+            }
+            
+            .forecast-table-container h4 {
+                font-size: 1rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            .forecast-table {
+                font-size: 0.7rem;
+            }
+            
+            .forecast-table th,
+            .forecast-table td {
+                padding: 0.25rem 0.125rem;
+            }
+            
+            /* Mobile data tables */
+            .data-table {
+                font-size: 0.7rem;
+            }
+            
+            .data-table th,
+            .data-table td {
+                padding: 0.25rem 0.125rem;
+            }
+            
+            /* Mobile top5 rankings */
+            .top5-rankings {
+                font-size: 0.7rem;
+                padding: 0.5rem;
+                margin-top: 0.5rem;
+        }
+            .header h1 {
+                font-size: 1.75rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .header-stats {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-menu {
+                flex-direction: column;
+            }
+
+            .nav-link {
+                padding: 0.75rem 1rem;
+            }
+            
+            .main-content {
+                padding: 1rem;
+            }
+            
+            .map-container,
+            .data-panel {
+                padding: 1rem;
+            }
+            
+            .indicator-section {
+                padding: 1rem;
+            }
+            
+            .current-indicators {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .data-categories {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .country-selector {
+                flex-direction: column;
+            }
+
+            .page-header h2 {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1480,34 +2227,277 @@
             </div>
         </header>
         
+        <nav class="navigation">
+            <div class="nav-container">
+                <ul class="nav-menu">
+                    <li class="nav-item active">
+                        <a href="#map" class="nav-link" data-page="map">
+                            <span class="nav-icon">🗺️</span>
+                            Interactive Map
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#data" class="nav-link" data-page="data">
+                            <span class="nav-icon">📊</span>
+                            Data Explorer
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#forecasts" class="nav-link" data-page="forecasts">
+                            <span class="nav-icon">🔮</span>
+                            Forecasts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#comparisons" class="nav-link" data-page="comparisons">
+                            <span class="nav-icon">⚖️</span>
+                            Comparisons
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#about" class="nav-link" data-page="about">
+                            <span class="nav-icon">ℹ️</span>
+                            About
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        
         <main class="main-content">
-            <div class="map-container">
-                <div class="map-header">
-                    <h2>Interactive World Map</h2>
-                    <p>Hover over countries to see names, click to view detailed data</p>
-
+            <!-- Map Page -->
+            <div class="page active" id="map-page">
+                <div class="map-container">
+                    <div class="map-header">
+                        <h2>Interactive World Map</h2>
+                        <p>Hover over countries to see names, click to view detailed data</p>
+                    </div>
+                    <div class="world-map" id="worldMap">
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <span>Loading world map...</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="world-map" id="worldMap">
-                    <div class="loading">
-                        <div class="spinner"></div>
-                        <span>Loading world map...</span>
+                
+                <div class="data-panel" id="dataPanel">
+                    <div class="data-header">
+                        <h2>Comprehensive Data Panel</h2>
+                    </div>
+                    <div class="no-selection">
+                        <p>👆 Click on any country on the map above to view its comprehensive data</p>
+                        <p>Data includes economic, social, environmental, and technology indicators for the last 10 years</p>
                     </div>
                 </div>
             </div>
-            
-            <div class="data-panel" id="dataPanel">
-                <div class="data-header">
-                    <h2>Comprehensive Data Panel</h2>
+
+            <!-- Data Explorer Page -->
+            <div class="page" id="data-page">
+                <div class="page-header">
+                    <h2>📊 Data Explorer</h2>
+                    <p>Explore global data by category and indicator</p>
                 </div>
-                <div class="no-selection">
-                    <p>👆 Click on any country on the map above to view its comprehensive data</p>
-                    <p>Data includes economic, social, environmental, and technology indicators for the last 10 years</p>
+                
+                <div class="data-categories">
+                    <div class="category-card">
+                        <h3>🌍 Economic Indicators</h3>
+                        <p>GDP, growth rates, inflation, trade data</p>
+                        <button class="explore-btn" onclick="showCategoryData('economic')">Explore Data</button>
+                    </div>
+                    
+                    <div class="category-card">
+                        <h3>👥 Social & Demographics</h3>
+                        <p>Population, education, health, life expectancy</p>
+                        <button class="explore-btn" onclick="showCategoryData('social')">Explore Data</button>
+                    </div>
+                    
+                    <div class="category-card">
+                        <h3>🌱 Energy & Environment</h3>
+                        <p>CO₂ emissions, renewable energy, deforestation</p>
+                        <button class="explore-btn" onclick="showCategoryData('environmental')">Explore Data</button>
+                    </div>
+                    
+                    <div class="category-card">
+                        <h3>💡 Technology & Innovation</h3>
+                        <p>Internet penetration, patents, R&D spending</p>
+                        <button class="explore-btn" onclick="showCategoryData('technology')">Explore Data</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forecasts Page -->
+            <div class="page" id="forecasts-page">
+                <div class="page-header">
+                    <h2>🔮 Economic Forecasts</h2>
+                    <p>5-year projections and trend analysis</p>
+                </div>
+                
+                <div class="forecast-overview">
+                    <div class="forecast-intro">
+                        <h3>Forecasting Methodology</h3>
+                        <p>Our forecasts use statistical analysis of historical data to project future trends. We combine linear regression, moving averages, and CAGR calculations to provide reliable projections with confidence intervals.</p>
+                    </div>
+                    
+                    <div class="forecast-metrics">
+                        <div class="metric-card">
+                            <h4>GDP Growth</h4>
+                            <p>Projected annual growth rates</p>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Population Trends</h4>
+                            <p>Demographic projections</p>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Inflation Outlook</h4>
+                            <p>Price stability forecasts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparisons Page -->
+            <div class="page" id="comparisons-page">
+                <div class="page-header">
+                    <h2>⚖️ Country Comparisons</h2>
+                    <p>Compare countries across different indicators</p>
+                </div>
+                
+                <div class="comparison-tools">
+                    <div class="comparison-selector">
+                        <h3>Select Countries to Compare</h3>
+                        <div class="country-selector">
+                            <select id="country1" class="country-select">
+                                <option value="">Select first country...</option>
+                            </select>
+                            <select id="country2" class="country-select">
+                                <option value="">Select second country...</option>
+                            </select>
+                        </div>
+                        <button class="compare-btn" onclick="compareCountries()">Compare Countries</button>
+                    </div>
+                    
+                    <div class="comparison-results" id="comparisonResults">
+                        <p>Select two countries above to see a detailed comparison</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- About Page -->
+            <div class="page" id="about-page">
+                <div class="page-header">
+                    <h2>ℹ️ About World Data Map</h2>
+                    <p>Learn about our data sources and methodology</p>
+                </div>
+                
+                <div class="about-content">
+                    <div class="about-section">
+                        <h3>Our Mission</h3>
+                        <p>World Data Map provides comprehensive, real-time global data visualization to help users understand global development trends and make informed decisions.</p>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>Data Sources</h3>
+                        <ul>
+                            <li><strong>World Bank</strong> - Economic and development indicators</li>
+                            <li><strong>IMF</strong> - Economic projections and forecasts</li>
+                            <li><strong>UNESCO</strong> - Education and cultural data</li>
+                            <li><strong>WHO</strong> - Health and life expectancy data</li>
+                            <li><strong>OWID/EDGAR</strong> - Environmental and CO₂ data</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="about-section">
+                        <h3>Technology</h3>
+                        <p>Built with modern web technologies including D3.js for data visualization, responsive design for all devices, and real-time API integration.</p>
+                    </div>
                 </div>
             </div>
         </main>
     </div>
 
     <script>
+        // Navigation system
+        function initNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const pages = document.querySelectorAll('.page');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all nav items and pages
+                    document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+                    pages.forEach(page => page.classList.remove('active'));
+                    
+                    // Add active class to clicked nav item
+                    link.parentElement.classList.add('active');
+                    
+                    // Show corresponding page
+                    const targetPage = link.getAttribute('data-page');
+                    const targetPageElement = document.getElementById(targetPage + '-page');
+                    if (targetPageElement) {
+                        targetPageElement.classList.add('active');
+                    }
+                });
+            });
+        }
+
+        // Page-specific functions
+        function showCategoryData(category) {
+            // This would show detailed data for the selected category
+            alert(`Showing ${category} data. This feature would display detailed indicators for the selected category.`);
+        }
+
+        function compareCountries() {
+            const country1 = document.getElementById('country1').value;
+            const country2 = document.getElementById('country2').value;
+            const resultsDiv = document.getElementById('comparisonResults');
+            
+            if (!country1 || !country2) {
+                alert('Please select both countries to compare.');
+                return;
+            }
+            
+            if (country1 === country2) {
+                alert('Please select different countries to compare.');
+                return;
+            }
+            
+            // This would fetch and display comparison data
+            resultsDiv.innerHTML = `
+                <h3>Comparing ${country1} vs ${country2}</h3>
+                <p>This feature would display a detailed side-by-side comparison of key indicators between the two countries.</p>
+                <div class="comparison-table">
+                    <p>Comparison data would be loaded here...</p>
+                </div>
+            `;
+        }
+
+        function populateCountryDropdowns() {
+            const countries = [
+                'United States', 'China', 'Japan', 'Germany', 'United Kingdom',
+                'France', 'India', 'Italy', 'Canada', 'Brazil', 'Russia', 'Australia',
+                'Spain', 'Mexico', 'Indonesia', 'Netherlands', 'Saudi Arabia',
+                'Turkey', 'Switzerland', 'Poland', 'Sweden', 'Belgium', 'Thailand',
+                'Austria', 'Norway', 'United Arab Emirates', 'Iran', 'Israel',
+                'Denmark', 'Singapore', 'Malaysia', 'Egypt', 'Philippines',
+                'Finland', 'Chile', 'Colombia', 'South Africa', 'Pakistan',
+                'Greece', 'Portugal', 'New Zealand', 'Peru', 'Czech Republic',
+                'Romania', 'Vietnam', 'Bangladesh', 'Hungary', 'Ukraine',
+                'Morocco', 'Slovakia', 'Croatia', 'Bulgaria', 'Tunisia'
+            ];
+            
+            const country1Select = document.getElementById('country1');
+            const country2Select = document.getElementById('country2');
+            
+            countries.forEach(country => {
+                const option1 = new Option(country, country);
+                const option2 = new Option(country, country);
+                country1Select.add(option1);
+                country2Select.add(option2);
+            });
+        }
+
         // Language translations
         const translations = {
             en: {
@@ -1853,7 +2843,7 @@
                 worldMap.addEventListener('mouseup', handleMouseUp, { passive: true });
                 worldMap.addEventListener('mouseleave', handleMouseLeave, { passive: true });
                 
-                // Touch events
+                // Touch events - ensure they're added
                 worldMap.addEventListener('touchstart', handleTouchStart, { passive: false });
                 worldMap.addEventListener('touchmove', handleTouchMove, { passive: false });
                 worldMap.addEventListener('touchend', handleTouchEnd, { passive: true });
@@ -1862,6 +2852,10 @@
                 worldMap.addEventListener('dragstart', (e) => e.preventDefault(), { passive: false });
                 worldMap.addEventListener('selectstart', (e) => e.preventDefault(), { passive: false });
                 worldMap.addEventListener('contextmenu', (e) => e.preventDefault(), { passive: false });
+                
+                // Debug touch events
+                console.log('Touch events added to worldMap:', worldMap);
+                console.log('Touch event handlers:', { handleTouchStart, handleTouchMove, handleTouchEnd });
             }
             
             // Global mouse events
@@ -1938,13 +2932,18 @@
         }
         
         // Touch Event Handlers
+        let touchStartTime = 0;
+        let touchMoved = false;
+
         function handleTouchStart(e) {
             if (e.touches.length === 1) {
                 isTouching = true;
+                touchStartTime = Date.now();
                 touchStartX = e.touches[0].clientX;
                 touchStartY = e.touches[0].clientY;
                 lastTouchX = mapX;
                 lastTouchY = mapY;
+                touchMoved = false;
                 e.preventDefault();
             }
         }
@@ -1954,24 +2953,61 @@
                 const touchX = e.touches[0].clientX;
                 const touchY = e.touches[0].clientY;
                 
-                const deltaX = touchX - touchStartX;
-                const deltaY = touchY - touchStartY;
+                const deltaX = Math.abs(touchX - touchStartX);
+                const deltaY = Math.abs(touchY - touchStartY);
                 
-                // Touch movement with bounds
-                mapX = lastTouchX + deltaX;
-                mapY = lastTouchY + deltaY;
-                
-                // Apply bounds
-                mapX = Math.max(-500, Math.min(500, mapX));
-                mapY = Math.max(-300, Math.min(300, mapY));
-                
-                updateMapTransform();
+                // If touch moved more than 10px, consider it a pan gesture
+                if (deltaX > 10 || deltaY > 10) {
+                    touchMoved = true;
+                    
+                    // Touch movement with bounds
+                    mapX = lastTouchX + (touchX - touchStartX);
+                    mapY = lastTouchY + (touchY - touchStartY);
+                    
+                    // Apply bounds
+                    mapX = Math.max(-500, Math.min(500, mapX));
+                    mapY = Math.max(-300, Math.min(300, mapY));
+                    
+                    updateMapTransform();
+                }
                 e.preventDefault();
             }
         }
 
         function handleTouchEnd(e) {
+            if (isTouching && !touchMoved) {
+                // This was a tap, not a pan - find the country under the touch point
+                const touchX = e.changedTouches[0].clientX;
+                const touchY = e.changedTouches[0].clientY;
+                
+                // Check if it's a quick tap (less than 300ms)
+                const touchDuration = Date.now() - touchStartTime;
+                if (touchDuration < 300) {
+                    // Find the country path under the touch point
+                    const elementUnderTouch = document.elementFromPoint(touchX, touchY);
+                    if (elementUnderTouch && elementUnderTouch.tagName === 'path') {
+                        // Add visual feedback for mobile users
+                        const originalFill = elementUnderTouch.style.fill;
+                        elementUnderTouch.style.fill = '#FFD700'; // Gold highlight
+                        
+                        // Remove highlight after 200ms
+                        setTimeout(() => {
+                            elementUnderTouch.style.fill = originalFill;
+                        }, 200);
+                        
+                        // Simulate a click on the country
+                        const clickEvent = new MouseEvent('click', {
+                            bubbles: true,
+                            cancelable: true,
+                            view: window
+                        });
+                        elementUnderTouch.dispatchEvent(clickEvent);
+                    }
+                }
+            }
+            
             isTouching = false;
+            touchMoved = false;
         }
 
 
@@ -3687,7 +4723,8 @@
                      }
                  });
                 
-                                 path.addEventListener('click', async function() {
+                                 // Add both click and touch events for mobile compatibility
+                 const handleCountrySelection = async function() {
                      svg.querySelectorAll('path').forEach(p => {
                          p.classList.remove('selected');
                          p.style.fill = '#90EE90';
@@ -3736,6 +4773,37 @@
                      };
                      
                      updateDataPanel(countryData);
+                 };
+                 
+                 // Add click event
+                 path.addEventListener('click', handleCountrySelection);
+                 
+                 // Add touch event for mobile
+                 path.addEventListener('touchend', function(e) {
+                     e.preventDefault();
+                     e.stopPropagation();
+                     
+                     // Add visual feedback
+                     const originalFill = this.style.fill;
+                     this.style.fill = '#FFD700';
+                     setTimeout(() => {
+                         this.style.fill = originalFill;
+                     }, 200);
+                     
+                     // Handle the selection
+                     handleCountrySelection.call(this);
+                 });
+                 
+                 // Also add touchstart to prevent default behaviors
+                 path.addEventListener('touchstart', function(e) {
+                     e.preventDefault();
+                     e.stopPropagation();
+                 });
+                 
+                 // Add touchmove to prevent scrolling while touching countries
+                 path.addEventListener('touchmove', function(e) {
+                     e.preventDefault();
+                     e.stopPropagation();
                  });
                 
                                  countriesGroup.appendChild(path);
@@ -3960,6 +5028,8 @@
 
             initWorldMap();
             updateDataPanel(null); // Initialize empty data panel
+            initNavigation(); // Initialize navigation system
+            populateCountryDropdowns(); // Populate country comparison dropdowns
         });
         window.addEventListener('resize', initWorldMap);
     </script>
