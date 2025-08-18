@@ -27,22 +27,63 @@
             min-height: 100vh;
             color: #1a202c;
             line-height: 1.6;
+            /* Ensure no scrollbar issues with fixed positioning */
+            overflow-x: hidden;
         }
 
         .app {
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        }
+
+        /* Global smooth scrolling */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Enhanced focus states for accessibility */
+        button:focus,
+        a:focus,
+        select:focus,
+        input:focus {
+            outline: 2px solid #1e40af;
+            outline-offset: 2px;
+        }
+
+        /* Improved loading states */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: #64748b;
+            font-weight: 500;
+            font-size: 1.125rem;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #1e40af;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .header {
-            background: #f1f5f9;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
             color: #1a202c;
-            padding: 1.5rem 0;
-            border-bottom: 1px solid #cbd5e1;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
+            padding: 2rem 0;
+            border-bottom: 2px solid #cbd5e1;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         .header-content {
@@ -52,41 +93,46 @@
         }
 
         .header h1 {
-            color: #1a202c;
+            color: #1e40af;
             font-size: 2rem;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
             margin: 0;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
+            letter-spacing: -0.025em;
         }
 
         .header p {
-            color: #64748b;
+            color: #475569;
             text-align: center;
-            margin-top: 1rem;
-            font-size: 1.125rem;
-            font-weight: 400;
+            margin-top: 0.75rem;
+            font-size: 1rem;
+            font-weight: 500;
             max-width: 600px;
             margin-left: auto;
             margin-right: auto;
+            line-height: 1.5;
         }
 
         .header-stats {
             display: flex !important;
             justify-content: center !important;
-            gap: 1rem !important;
-            margin-top: 1rem !important;
+            gap: 0.75rem !important;
+            margin-top: 0.5rem !important;
             flex-wrap: nowrap !important;
             flex-direction: row !important;
             align-items: center !important;
+            background: rgba(241, 245, 249, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem;
+            border-radius: 8px;
         }
 
-        /* Navigation Styles */
+        /* Enhanced Navigation Styles */
         .navigation {
-            background: #e2e8f0;
-            border-bottom: 1px solid #cbd5e1;
-            position: sticky;
-            top: 0;
-            z-index: 999;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            border-bottom: 2px solid #1e40af;
+            box-shadow: 0 2px 10px rgba(30, 64, 175, 0.2);
         }
 
         .nav-container {
@@ -101,6 +147,9 @@
             margin: 0;
             padding: 0;
             gap: 0;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
         }
 
         .nav-item {
@@ -111,23 +160,42 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            padding: 1rem 1.5rem;
-            color: #475569;
+            padding: 1.25rem 1.75rem;
+            color: #ffffff;
             text-decoration: none;
-            font-weight: 500;
+            font-weight: 600;
             border-bottom: 3px solid transparent;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .nav-link:hover::before {
+            left: 100%;
         }
 
         .nav-link:hover {
-            color: #1e40af;
-            background: #f1f5f9;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .nav-item.active .nav-link {
-            color: #1e40af;
-            border-bottom-color: #1e40af;
-            background: #f1f5f9;
+            color: #ffffff;
+            border-bottom-color: #fbbf24;
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         }
 
         .nav-icon {
@@ -136,29 +204,30 @@
 
         .stat-item {
             text-align: center;
-            padding: 0.5rem !important;
-            background: #f1f5f9 !important;
-            border: 1px solid #cbd5e1 !important;
+            padding: 0.375rem !important;
+            background: rgba(241, 245, 249, 0.9) !important;
+            border: 1px solid rgba(203, 213, 225, 0.8) !important;
             border-radius: 6px !important;
-            min-width: 80px !important;
+            min-width: 70px !important;
             flex: 1 !important;
-            max-width: 100px !important;
+            max-width: 90px !important;
             display: inline-block !important;
             float: none !important;
             clear: none !important;
+            backdrop-filter: blur(5px);
         }
 
         .stat-number {
             display: block !important;
-            font-size: 1.25rem !important;
+            font-size: 1rem !important;
             font-weight: 700 !important;
             color: #1e40af !important;
-            margin-bottom: 0.25rem !important;
+            margin-bottom: 0.125rem !important;
         }
 
         .stat-label {
             display: block !important;
-            font-size: 0.75rem !important;
+            font-size: 0.625rem !important;
             color: #475569 !important;
             font-weight: 500 !important;
         }
@@ -173,59 +242,112 @@
             flex: 1;
             max-width: 1200px;
             margin: 0 auto;
-            padding: 1rem;
+            padding: 1.5rem;
         }
 
         .map-container {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border: 1px solid #cbd5e1;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         .map-header {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
 
         .map-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
         }
 
         .map-header p {
-            color: #64748b;
-            font-size: 1rem;
+            color: #475569;
+            font-size: 1.125rem;
+            font-weight: 500;
+            line-height: 1.5;
         }
 
         .world-map {
             height: 600px;
-            background: #f8fafc;
-            border-radius: 8px;
+            background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 100%);
+            border-radius: 12px;
             position: relative;
             overflow: hidden;
-            border: 1px solid #e2e8f0;
+            border: 2px solid #cbd5e1;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            /* Performance optimizations */
+            will-change: transform;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
         }
 
         .country {
-            fill: #e0f2fe;
-            stroke: #0ea5e9;
-            stroke-width: 0.5;
+            fill: #90EE90;
+            stroke: #228B22;
+            stroke-width: 0.8;
             cursor: pointer;
-            transition: fill 0.2s ease;
+            transition: fill 0.2s ease, stroke 0.2s ease;
+            /* Performance optimizations */
+            will-change: fill, stroke;
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            /* Prevent flickering */
+            pointer-events: auto;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
 
         .country:hover {
-            fill: #bae6fd;
+            fill: #98FB98;
+            stroke: #32CD32;
+            stroke-width: 1.2;
         }
 
         .country.selected {
-            fill: #fecaca;
-            stroke: #ef4444;
-            stroke-width: 2;
+            fill: #FF6B6B;
+            stroke: #DC143C;
+            stroke-width: 2.5;
+            filter: drop-shadow(0 0 8px rgba(220, 20, 60, 0.3));
+        }
+
+        /* Prevent hover flickering on small countries */
+        .country:hover:not(.selected) {
+            z-index: 10;
+            /* Prevent aggressive hover effects that cause flickering */
+            transform: none;
+            transition: fill 0.15s ease, stroke 0.15s ease;
+        }
+
+        /* Optimize small country interactions */
+        .country {
+            /* Ensure consistent cursor behavior */
+            cursor: pointer !important;
+            /* Prevent text selection */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Smooth transitions */
+            transition: fill 0.15s ease, stroke 0.15s ease;
+        }
+
+        /* Prevent flickering on hover state changes */
+        .country:hover {
+            /* Remove transform to prevent flickering */
+            transform: none;
+            /* Ensure smooth color transitions */
+            transition: fill 0.15s ease, stroke 0.15s ease;
         }
 
         .country-tooltip {
@@ -241,22 +363,26 @@
         }
 
         .data-panel {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 1.5rem;
-            border: 1px solid #cbd5e1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 16px;
+            padding: 2rem;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
         }
 
         .data-header {
             text-align: center;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px solid #e2e8f0;
         }
 
         .data-header h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.75rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
         }
 
         .data-content {
@@ -292,48 +418,69 @@
         }
 
         .data-card {
-            background: #f1f5f9;
-            border-radius: 8px;
-            padding: 1.5rem;
-            border: 1px solid #cbd5e1;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 12px;
+            padding: 2rem;
+            border: 2px solid #e2e8f0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
         }
 
         .data-card h3 {
-            color: #1a202c;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
+            color: #1e40af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
         }
 
         .data-table {
             width: 100%;
             border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .data-table th,
         .data-table td {
-            padding: 0.75rem;
+            padding: 1rem;
             text-align: left;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .data-table th {
-            background: #e2e8f0;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             font-weight: 600;
-            color: #475569;
+            color: #ffffff;
             font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .data-table td {
             color: #1a202c;
             font-size: 0.875rem;
+            background: #ffffff;
         }
 
         .data-table tr:hover {
-            background: #e2e8f0;
+            background: #f8fafc;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+
+        .data-table tr:nth-child(even) td {
+            background: #f8fafc;
         }
 
         .loading {
@@ -693,33 +840,50 @@
          }
 
          .calculation-formulas {
-             background: #f1f5f9;
-             border: 1px solid #cbd5e1;
-             border-radius: 8px;
-             padding: 1.5rem;
+             background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+             border: 2px solid #cbd5e1;
+             border-radius: 16px;
+             padding: 2rem;
              margin-bottom: 2rem;
+             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
          }
 
          .calculation-formulas h4 {
-             margin: 0 0 1rem 0;
+             margin: 0 0 1.5rem 0;
              color: #1e40af;
-             font-size: 1.25rem;
-             font-weight: 600;
+             font-size: 1.5rem;
+             font-weight: 700;
+             text-align: center;
+             text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
          }
 
          .formula-grid {
              display: grid;
-             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-             gap: 1rem;
+             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+             gap: 1.5rem;
          }
 
          .formula-item {
-             background: #e2e8f0;
-             border-radius: 6px;
-             padding: 0.75rem;
-             font-size: 0.9rem;
-             border: 1px solid #cbd5e1;
+             background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+             border-radius: 12px;
+             padding: 1.25rem;
+             font-size: 1rem;
+             border: 2px solid #e2e8f0;
              color: #475569;
+             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+             transition: all 0.3s ease;
+             text-align: center;
+         }
+
+         .formula-item:hover {
+             transform: translateY(-2px);
+             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+             border-color: #1e40af;
+         }
+
+         .formula-item strong {
+             color: #1e40af;
+             font-weight: 700;
          }
 
          .yearly-forecasts {
@@ -785,20 +949,35 @@
              font-weight: 600;
          }
 
-         /* Sources Section */
+         /* Enhanced Sources Section */
          .sources-section {
              background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
              color: white;
-             padding: 4rem 0;
-             margin-top: 2rem;
+             padding: 5rem 0;
+             margin-top: 3rem;
+             position: relative;
+             overflow: hidden;
+         }
+
+         .sources-section::before {
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 0;
+             right: 0;
+             bottom: 0;
+             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.03)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+             pointer-events: none;
          }
 
          .sources-section h2 {
              text-align: center;
-             font-size: 2.5rem;
-             margin-bottom: 3rem;
+             font-size: 3rem;
+             margin-bottom: 4rem;
              color: white;
-             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+             text-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+             font-weight: 800;
+             letter-spacing: -0.025em;
          }
 
          .sources-grid {
@@ -865,12 +1044,25 @@
              color: #f3f4f6;
          }
 
-         /* Footer Signature */
+         /* Enhanced Footer Signature */
          .footer-signature {
              background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
              color: white;
-             padding: 2rem 0;
-             border-top: 2px solid #fbbf24;
+             padding: 3rem 0;
+             border-top: 3px solid #fbbf24;
+             position: relative;
+             overflow: hidden;
+         }
+
+         .footer-signature::before {
+             content: '';
+             position: absolute;
+             top: 0;
+             left: 0;
+             right: 0;
+             bottom: 0;
+             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="stars" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="0.5" fill="rgba(251,191,36,0.3)"/><circle cx="80" cy="40" r="0.3" fill="rgba(251,191,36,0.2)"/><circle cx="40" cy="80" r="0.4" fill="rgba(251,191,36,0.25)"/></pattern></defs><rect width="100" height="100" fill="url(%23stars)"/></svg>');
+             pointer-events: none;
          }
 
          .signature-content {
@@ -878,18 +1070,21 @@
              flex-direction: column;
              align-items: center;
              justify-content: center;
-             gap: 1rem;
+             gap: 1.5rem;
              width: 100%;
              max-width: 1200px;
              margin: 0 auto;
+             position: relative;
+             z-index: 1;
          }
 
          .signature-text {
-             font-size: 1.2rem;
-             font-weight: 600;
+             font-size: 1.5rem;
+             font-weight: 700;
              color: #fbbf24;
-             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
              text-align: center;
+             letter-spacing: 0.025em;
          }
 
          .tech-stack {
@@ -924,7 +1119,7 @@
          }
 
          .lang-btn {
-             padding: 0.5rem 1rem;
+             padding: 0.375rem 0.75rem;
              border: 1px solid #cbd5e1;
              background: #f1f5f9;
              color: #475569;
@@ -932,7 +1127,7 @@
              cursor: pointer;
              font-weight: 500;
              transition: all 0.2s ease;
-             font-size: 0.875rem;
+             font-size: 0.75rem;
              margin-left: 0.5rem;
          }
 
@@ -1197,28 +1392,62 @@
              }
          }
 
-         /* Mobile-specific data panel optimizations */
-         @media (max-width: 768px) {
-             .data-panel {
-                 margin: 0.5rem;
-                 border-radius: 12px;
-                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-             }
+                 /* Enhanced Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .data-panel {
+                margin: 0.5rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+                padding: 1rem;
+            }
 
-             .indicator-section {
-                 margin-bottom: 1rem;
-                 border-radius: 10px;
-             }
+            .indicator-section {
+                margin-bottom: 1rem;
+                border-radius: 10px;
+                padding: 1rem;
+            }
 
-             .forecast-table-container {
-                 overflow-x: auto;
-                 -webkit-overflow-scrolling: touch;
-             }
+            .forecast-table-container {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                padding: 1rem;
+            }
 
-             .forecast-table {
-                 min-width: 600px;
-             }
-         }
+            .forecast-table {
+                min-width: 600px;
+            }
+
+            .forecast-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .forecast-card {
+                padding: 1rem;
+            }
+
+            .current-indicators {
+                grid-template-columns: 1fr;
+                gap: 0.75rem;
+            }
+
+            .indicator-item {
+                padding: 0.75rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 0.25rem;
+            }
+
+            .section-header h3 {
+                font-size: 1.25rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .visualization-note {
+                font-size: 0.8rem;
+                padding: 0.5rem;
+            }
+        }
          
          .zoom-controls {
              position: absolute;
@@ -1311,39 +1540,75 @@
              shape-rendering: optimizeSpeed;
          }
 
-         /* Performance optimizations for smooth interactions */
-         .world-map svg {
-             shape-rendering: optimizeSpeed;
-             text-rendering: optimizeSpeed;
-             -webkit-user-select: none;
-             -moz-user-select: none;
-             -ms-user-select: none;
-             user-select: none;
-         }
+                 /* Performance optimizations for smooth interactions */
+        .world-map svg {
+            shape-rendering: optimizeSpeed;
+            text-rendering: optimizeSpeed;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Prevent flickering */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
 
-         .world-map svg path {
-             shape-rendering: geometricPrecision;
-             vector-effect: non-scaling-stroke;
-             -webkit-user-select: none;
-             -moz-user-select: none;
-             -ms-user-select: none;
-             user-select: none;
-         }
+        .world-map svg path {
+            shape-rendering: geometricPrecision;
+            vector-effect: non-scaling-stroke;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            /* Prevent flickering */
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            /* Smooth transitions */
+            transition: fill 0.15s ease, stroke 0.15s ease;
+        }
 
-         /* Chrome-specific cursor handling */
-         .world-map {
-             cursor: grab !important;
-             -webkit-user-select: none !important;
-             -moz-user-select: none !important;
-             -ms-user-select: none !important;
-             user-select: none !important;
-             -webkit-touch-callout: none !important;
-             -webkit-tap-highlight-color: transparent !important;
-         }
-         
-         .world-map.grabbing {
-             cursor: grabbing !important;
-         }
+        /* Prevent flickering on small countries */
+        .world-map svg path:hover {
+            z-index: 5;
+        }
+
+        /* Optimize for small countries */
+        .world-map svg path[data-country] {
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+                 /* Chrome-specific cursor handling */
+        .world-map {
+            cursor: grab !important;
+            -webkit-user-select: none !important;
+            -moz-user-select: none !important;
+            -ms-user-select: none !important;
+            user-select: none !important;
+            -webkit-touch-callout: none !important;
+            -webkit-tap-highlight-color: transparent !important;
+            /* Prevent cursor flickering */
+            cursor: -webkit-grab;
+            cursor: -moz-grab;
+        }
+        
+        .world-map.grabbing {
+            cursor: grabbing !important;
+            cursor: -webkit-grabbing;
+            cursor: -moz-grabbing;
+        }
+
+        /* Prevent cursor flickering on countries */
+        .world-map svg path {
+            cursor: pointer !important;
+            cursor: -webkit-pointer;
+            cursor: -moz-pointer;
+        }
+
+        /* Smooth cursor transitions */
+        .world-map svg path:hover {
+            cursor: pointer !important;
+        }
 
          /* Chrome-specific drag handling */
          .world-map svg {
@@ -1407,35 +1672,46 @@
          }
 
          /* Smooth zoom controls */
-         .zoom-controls {
-             position: absolute;
-             top: 20px;
-             right: 20px;
-             display: flex;
-             flex-direction: column;
-             gap: 8px;
-             z-index: 1000;
-             pointer-events: auto;
-         }
+                 .zoom-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: auto;
+        }
 
-         .zoom-btn {
-             width: 50px;
-             height: 50px;
-             border: none;
-             border-radius: 8px;
-             background: rgba(255, 255, 255, 0.95);
-             color: #2d3748;
-             font-size: 18px;
-             font-weight: bold;
-             cursor: pointer;
-             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
-             transition: all 0.2s ease;
-             display: flex;
-             align-items: center;
-             justify-content: center;
-             -webkit-tap-highlight-color: transparent;
-             touch-action: manipulation;
-         }
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.9) 100%);
+            color: #1e40af;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            backdrop-filter: blur(10px);
+        }
+
+        .zoom-btn:hover {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.95) 100%);
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .zoom-btn:active {
+            transform: scale(0.95);
+        }
 
         @media (max-width: 768px) {
             .header {
@@ -1487,13 +1763,14 @@
             min-width: 500px;
         }
 
-        /* Basic Indicator Section Styles */
+        /* Unified Indicator Section Styles */
         .indicator-section {
             margin-bottom: 2rem;
             border: 1px solid #cbd5e1;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 1.5rem;
-            background: #f1f5f9;
+            background: #f8fafc;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .section-header h3 {
@@ -1509,19 +1786,20 @@
 
         .visualization-note {
             font-size: 0.875rem;
-            color: #1a202c;
+            color: #475569;
             margin-bottom: 1rem;
             padding: 0.75rem;
             background: #e2e8f0;
             border-radius: 6px;
             border-left: 3px solid #1e40af;
+            line-height: 1.5;
         }
 
         .current-indicators {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
         }
 
         .indicator-item {
@@ -1529,9 +1807,16 @@
             justify-content: space-between;
             align-items: center;
             padding: 1rem;
-            background: #e2e8f0;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .indicator-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
 
         .indicator-label {
@@ -1546,38 +1831,47 @@
             color: #1a202c;
         }
 
-        /* Basic Forecast Styles */
+        /* Enhanced Forecast Styles */
         .forecast-table-container {
             margin-bottom: 1.5rem;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
         }
 
         .forecast-table-container h4 {
-            color: #1a202c;
-            font-size: 1.125rem;
-            margin-bottom: 0.75rem;
+            color: #1e40af;
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
             font-weight: 600;
+            text-align: center;
         }
 
         .forecast-table {
             width: 100%;
             border-collapse: collapse;
-            background: #ffffff;
-            border-radius: 6px;
+            background: #f8fafc;
+            border-radius: 8px;
             overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
         .forecast-table th,
         .forecast-table td {
             padding: 0.75rem;
-            text-align: left;
+            text-align: center;
             border-bottom: 1px solid #e2e8f0;
         }
 
         .forecast-table th {
-            background: #f8fafc;
+            background: #e2e8f0;
             font-weight: 600;
             color: #475569;
             font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .forecast-table td {
@@ -1586,66 +1880,80 @@
         }
 
         .forecast-table tr:hover {
-            background: #f8fafc;
+            background: #f1f5f9;
         }
 
         .forecast-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0;
+            gap: 1.5rem;
+            margin: 2rem 0;
         }
 
         .forecast-card {
             background: #ffffff;
-            border-radius: 8px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 1.5rem;
             border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .forecast-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .forecast-card h4 {
-            color: #1a202c;
-            font-size: 1rem;
-            margin-bottom: 0.75rem;
+            color: #1e40af;
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
             font-weight: 600;
+            text-align: center;
         }
 
         .forecast-value {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
         }
 
         .forecast-year {
-            color: #64748b;
+            display: block;
             font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 0.5rem;
         }
 
         .forecast-main {
-            color: #3b82f6;
-            font-size: 1rem;
-            font-weight: 600;
+            display: block;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 0.25rem;
         }
 
         .forecast-trend {
-            color: #64748b;
+            text-align: center;
             font-size: 0.875rem;
-            font-style: italic;
+            padding: 0.5rem;
+            background: #e2e8f0;
+            border-radius: 6px;
+            color: #475569;
+            margin-top: 0.5rem;
         }
 
         .forecast-methodology {
-            background: #f8fafc;
-            padding: 1rem;
-            border-radius: 8px;
-            margin-top: 1.5rem;
-            border-left: 3px solid #3b82f6;
+            background: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-top: 2rem;
+            border-left: 4px solid #1e40af;
         }
 
         .forecast-methodology p {
             color: #475569;
             font-size: 0.875rem;
-            line-height: 1.5;
+            line-height: 1.6;
             margin: 0;
         }
 
@@ -1702,74 +2010,117 @@
             color: #991b1b;
         }
 
-        /* Page System */
+        /* Enhanced Page System */
         .page {
             display: none;
+            animation: fadeIn 0.5s ease-in-out;
         }
 
         .page.active {
             display: block;
         }
 
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .page-header {
             text-align: center;
-            margin-bottom: 2rem;
-            padding: 2rem 0;
+            margin-bottom: 3rem;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 16px;
+            border: 2px solid #cbd5e1;
         }
 
         .page-header h2 {
-            font-size: 2rem;
-            font-weight: 600;
-            color: #1a202c;
-            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1e40af;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(30, 64, 175, 0.1);
         }
 
         .page-header p {
-            color: #64748b;
-            font-size: 1.125rem;
+            color: #475569;
+            font-size: 1.25rem;
+            font-weight: 500;
+            line-height: 1.6;
         }
 
-        /* Data Explorer Styles */
+        /* Enhanced Data Explorer Styles */
         .data-categories {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
         }
 
         .category-card {
-            background: #f1f5f9;
-            border: 1px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 2rem;
             text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1e40af, #3b82f6, #8b5cf6);
+        }
+
+        .category-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+            border-color: #1e40af;
         }
 
         .category-card h3 {
-            color: #1a202c;
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
+            color: #1e40af;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 1px 2px rgba(30, 64, 175, 0.1);
         }
 
         .category-card p {
-            color: #64748b;
-            margin-bottom: 1rem;
+            color: #475569;
+            margin-bottom: 1.5rem;
+            font-size: 1rem;
+            line-height: 1.6;
         }
 
         .explore-btn {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             color: white;
             border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 6px;
+            padding: 1rem 2rem;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 500;
-            transition: background 0.2s ease;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
         }
 
         .explore-btn:hover {
-            background: #2563eb;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(30, 64, 175, 0.4);
+        }
+
+        .explore-btn:active {
+            transform: translateY(0);
         }
 
         /* Forecasts Page Styles */
@@ -4577,56 +4928,73 @@
             tryNextUrl(0);
         }
         
-                 function renderRealWorldMap(geoData) {
-             const worldMap = document.getElementById('worldMap');
-             worldMap.innerHTML = '';
-             
-             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-             svg.setAttribute('width', '100%');
-             svg.setAttribute('height', '100%');
-             svg.setAttribute('viewBox', '0 0 1000 500');
-             svg.style.pointerEvents = 'auto'; // Enable proper event handling
-             svg.style.display = 'block';
-             
-             // Use global variables instead of local declarations
-             
-             const ocean = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-             ocean.setAttribute('width', '100%');
-             ocean.setAttribute('height', '100%');
-             ocean.setAttribute('fill', '#e6f3ff');
-             ocean.setAttribute('stroke', '#b3d9ff');
-             ocean.setAttribute('stroke-width', '1');
-             svg.appendChild(ocean);
-             
-             const projection = d3.geoMercator()
-                 .fitSize([1000, 500], geoData);
-             
-             const pathGenerator = d3.geoPath().projection(projection);
-             
-             const countriesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-             countriesGroup.setAttribute('id', 'countriesGroup');
-             countriesGroup.style.pointerEvents = 'auto'; // Enable proper event handling
-             svg.appendChild(countriesGroup);
+                         function renderRealWorldMap(geoData) {
+            const worldMap = document.getElementById('worldMap');
+            worldMap.innerHTML = '';
             
-             geoData.features.forEach(feature => {
-                 let originalCountryName = feature.properties.ADMIN || 
-                                   feature.properties.NAME || 
-                                   feature.properties.NAME_LONG ||
-                                   feature.properties.COUNTRY ||
-                                   feature.properties.SOVEREIGNT ||
-                                   feature.properties.name ||
-                                   feature.properties.admin ||
-                                   feature.properties.country ||
-                                   feature.properties.NAME_EN ||
-                                   feature.properties.ADMIN_EN ||
-                                   'Unknown';
-                 
-                 const isWesternSahara = originalCountryName === 'Western Sahara' || 
-                                       originalCountryName === 'W. Sahara' || 
-                                       originalCountryName === 'Sahrawi Arab Democratic Republic' || 
-                                       originalCountryName === 'SADR';
-                 
-                 let countryName = isWesternSahara ? 'Morocco' : originalCountryName;
+            // Performance optimization: Use DocumentFragment for batch DOM operations
+            const fragment = document.createDocumentFragment();
+            
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '100%');
+            svg.setAttribute('height', '100%');
+            svg.setAttribute('viewBox', '0 0 1000 500');
+            svg.style.pointerEvents = 'auto';
+            svg.style.display = 'block';
+            
+            // Performance: Add will-change for GPU acceleration
+            svg.style.willChange = 'transform';
+            
+            const ocean = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            ocean.setAttribute('width', '100%');
+            ocean.setAttribute('height', '100%');
+            ocean.setAttribute('fill', '#e6f3ff');
+            ocean.setAttribute('stroke', '#b3d9ff');
+            ocean.setAttribute('stroke-width', '1');
+            svg.appendChild(ocean);
+            
+            // Performance: Use more efficient projection
+            const projection = d3.geoMercator()
+                .fitSize([1000, 500], geoData)
+                .precision(100); // Reduce precision for better performance
+            
+            const pathGenerator = d3.geoPath().projection(projection);
+            
+            const countriesGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            countriesGroup.setAttribute('id', 'countriesGroup');
+            countriesGroup.style.pointerEvents = 'auto';
+            
+            // Performance: Add transform3d for hardware acceleration
+            countriesGroup.style.transform = 'translate3d(0, 0, 0)';
+            countriesGroup.style.willChange = 'transform';
+            
+            svg.appendChild(countriesGroup);
+            
+                         // Performance: Batch process countries for better performance
+            const countryPaths = [];
+            const countryData = new Map(); // Cache country data
+            
+            geoData.features.forEach(feature => {
+                // Performance: Cache property lookups
+                const props = feature.properties;
+                let originalCountryName = props.ADMIN || 
+                              props.NAME || 
+                              props.NAME_LONG ||
+                              props.COUNTRY ||
+                              props.SOVEREIGNT ||
+                              props.name ||
+                              props.admin ||
+                              props.country ||
+                              props.NAME_EN ||
+                              props.ADMIN_EN ||
+                              'Unknown';
+                
+                const isWesternSahara = originalCountryName === 'Western Sahara' || 
+                                      originalCountryName === 'W. Sahara' || 
+                                      originalCountryName === 'Sahrawi Arab Democratic Republic' || 
+                                      originalCountryName === 'SADR';
+                
+                let countryName = isWesternSahara ? 'Morocco' : originalCountryName;
                  
 
                  
@@ -4642,86 +5010,104 @@
                  
                  console.log(`Map country: ${countryName}, Original code: ${feature.properties.ISO_A2 || feature.properties.ISO_A3}, Final code: ${countryCode}`);
                 
-                                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                 path.setAttribute('d', pathGenerator(feature));
-                 path.setAttribute('class', 'country');
-                 path.setAttribute('data-country', countryName);
-                 path.setAttribute('data-original-country', originalCountryName);
-                 path.setAttribute('data-is-western-sahara', isWesternSahara);
-                 path.setAttribute('data-code', countryCode);
-                 
-                 // Set default styling and pointer events
-                 path.style.fill = '#90EE90';
-                 path.style.stroke = '#228B22';
-                 path.style.strokeWidth = '0.8';
-                 path.style.cursor = 'pointer';
-                 path.style.pointerEvents = 'auto'; // Enable clicking on countries
-                 
-                 if (countryName === 'Morocco') {
-                     path.style.stroke = '#90EE90';
-                     path.style.strokeWidth = '0.1';
-                 }
+                                                 // Performance: Create path with optimized attributes
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', pathGenerator(feature));
+                path.setAttribute('class', 'country');
+                path.setAttribute('data-country', countryName);
+                path.setAttribute('data-original-country', originalCountryName);
+                path.setAttribute('data-is-western-sahara', isWesternSahara);
+                path.setAttribute('data-code', countryCode);
                 
-                // Add event listeners
-                                 path.addEventListener('mouseover', function(event) {
-                     const tooltip = document.createElement('div');
-                     tooltip.className = 'country-tooltip';
-                     tooltip.textContent = countryName;
-                     tooltip.style.left = (event.pageX + 10) + 'px';
-                     tooltip.style.top = (event.pageY - 10) + 'px';
-                     document.body.appendChild(tooltip);
-                     
-                     const isHoveredMoroccoRegion = countryName === 'Morocco' || 
-                                                   this.getAttribute('data-is-western-sahara') === 'true';
-                     
-                     if (isHoveredMoroccoRegion) {
-                         svg.querySelectorAll('path').forEach(p => {
-                             const pathCountry = p.getAttribute('data-country');
-                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
-                             
-                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
-                                 if (!p.classList.contains('selected')) {
-                                     p.style.fill = '#98FB98';
-                                     p.style.stroke = '#98FB98';
-                                     p.style.strokeWidth = '0.1';
-                                 }
-                             }
-                         });
-                     } else {
-                         this.style.fill = '#98FB98';
-                         this.style.stroke = '#32CD32';
-                         this.style.strokeWidth = '1.2';
-                     }
-                 });
+                // Performance: Use CSS classes instead of inline styles where possible
+                path.style.fill = '#90EE90';
+                path.style.stroke = countryName === 'Morocco' ? '#90EE90' : '#228B22';
+                path.style.strokeWidth = countryName === 'Morocco' ? '0.1' : '0.8';
+                path.style.cursor = 'pointer';
+                path.style.pointerEvents = 'auto';
                 
-                                 path.addEventListener('mouseout', function() {
-                     const tooltips = document.querySelectorAll('.country-tooltip');
-                     tooltips.forEach(tooltip => tooltip.remove());
-                     
-                     const isHoveredMoroccoRegion = countryName === 'Morocco' || 
-                                                   this.getAttribute('data-is-western-sahara') === 'true';
-                     
-                     if (isHoveredMoroccoRegion) {
-                         svg.querySelectorAll('path').forEach(p => {
-                             const pathCountry = p.getAttribute('data-country');
-                             const pathIsWesternSahara = p.getAttribute('data-is-western-sahara') === 'true';
-                             
-                             if (pathCountry === 'Morocco' || pathIsWesternSahara) {
-                                 if (!p.classList.contains('selected')) {
-                                     p.style.fill = '#90EE90';
-                                     p.style.stroke = '#90EE90';
-                                     p.style.strokeWidth = '0.1';
-                                 }
-                             }
-                         });
-                     } else {
-                         if (!this.classList.contains('selected')) {
-                             this.style.fill = '#90EE90';
-                             this.style.stroke = '#228B22';
-                             this.style.strokeWidth = '0.8';
-                         }
-                     }
-                 });
+                // Performance: Add will-change for hover effects
+                path.style.willChange = 'fill, stroke';
+                
+                // Cache country data for performance
+                countryData.set(countryName, {
+                    originalName: originalCountryName,
+                    isWesternSahara,
+                    code: countryCode
+                });
+                
+                                // Performance: Optimized event listeners with debouncing
+                let hoverTimeout;
+                let isHovered = false;
+                
+                path.addEventListener('mouseover', function(event) {
+                    if (isHovered) return; // Prevent duplicate hover events
+                    isHovered = true;
+                    
+                    // Performance: Debounce hover events
+                    clearTimeout(hoverTimeout);
+                    hoverTimeout = setTimeout(() => {
+                        // Performance: Use cached data instead of DOM queries
+                        const isHoveredMoroccoRegion = countryName === 'Morocco' || 
+                                                      this.getAttribute('data-is-western-sahara') === 'true';
+                        
+                        if (isHoveredMoroccoRegion) {
+                            // Performance: Batch DOM updates
+                            const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"], path[data-is-western-sahara="true"]');
+                            moroccoPaths.forEach(p => {
+                                if (!p.classList.contains('selected')) {
+                                    p.style.fill = '#98FB98';
+                                    p.style.stroke = '#98FB98';
+                                    p.style.strokeWidth = '0.1';
+                                }
+                            });
+                        } else {
+                            this.style.fill = '#98FB98';
+                            this.style.stroke = '#32CD32';
+                            this.style.strokeWidth = '1.2';
+                        }
+                        
+                        // Performance: Create tooltip only when needed
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'country-tooltip';
+                        tooltip.textContent = countryName;
+                        tooltip.style.left = (event.pageX + 10) + 'px';
+                        tooltip.style.top = (event.pageY - 10) + 'px';
+                        document.body.appendChild(tooltip);
+                    }, 30); // Reduced to 30ms debounce for better responsiveness
+                });
+                
+                                                 path.addEventListener('mouseout', function() {
+                    // Performance: Clear hover timeout and reset state
+                    clearTimeout(hoverTimeout);
+                    isHovered = false;
+                    
+                    // Performance: Remove tooltips efficiently
+                    const tooltips = document.querySelectorAll('.country-tooltip');
+                    tooltips.forEach(tooltip => tooltip.remove());
+                    
+                    // Performance: Use cached data
+                    const isHoveredMoroccoRegion = countryName === 'Morocco' || 
+                                                  this.getAttribute('data-is-western-sahara') === 'true';
+                    
+                    if (isHoveredMoroccoRegion) {
+                        // Performance: Batch DOM updates
+                        const moroccoPaths = countriesGroup.querySelectorAll('path[data-country="Morocco"], path[data-is-western-sahara="true"]');
+                        moroccoPaths.forEach(p => {
+                            if (!p.classList.contains('selected')) {
+                                p.style.fill = '#90EE90';
+                                p.style.stroke = '#90EE90';
+                                p.style.strokeWidth = '0.1';
+                            }
+                        });
+                    } else {
+                        if (!this.classList.contains('selected')) {
+                            this.style.fill = '#90EE90';
+                            this.style.stroke = '#228B22';
+                            this.style.strokeWidth = '0.8';
+                        }
+                    }
+                });
                 
                                  // Add both click and touch events for mobile compatibility
                  const handleCountrySelection = async function() {
@@ -4778,38 +5164,57 @@
                  // Add click event
                  path.addEventListener('click', handleCountrySelection);
                  
-                 // Add touch event for mobile
-                 path.addEventListener('touchend', function(e) {
-                     e.preventDefault();
-                     e.stopPropagation();
-                     
-                     // Add visual feedback
-                     const originalFill = this.style.fill;
-                     this.style.fill = '#FFD700';
-                     setTimeout(() => {
-                         this.style.fill = originalFill;
-                     }, 200);
-                     
-                     // Handle the selection
-                     handleCountrySelection.call(this);
-                 });
-                 
-                 // Also add touchstart to prevent default behaviors
-                 path.addEventListener('touchstart', function(e) {
-                     e.preventDefault();
-                     e.stopPropagation();
-                 });
-                 
-                 // Add touchmove to prevent scrolling while touching countries
-                 path.addEventListener('touchmove', function(e) {
-                     e.preventDefault();
-                     e.stopPropagation();
-                 });
+                                 // Performance: Add touch event for mobile
+                path.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Add visual feedback
+                    const originalFill = this.style.fill;
+                    this.style.fill = '#FFD700';
+                    setTimeout(() => {
+                        this.style.fill = originalFill;
+                    }, 200);
+                    
+                    // Handle the selection
+                    handleCountrySelection.call(this);
+                });
                 
-                                 countriesGroup.appendChild(path);
-             });
-             
-             const zoomControls = document.createElement('div');
+                // Performance: Add touchstart to prevent default behaviors
+                path.addEventListener('touchstart', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Prevent cursor flickering on touch
+                    this.style.cursor = 'pointer';
+                });
+                
+                // Performance: Add touchmove to prevent scrolling while touching countries
+                path.addEventListener('touchmove', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+
+                // Performance: Add mouseenter/mouseleave for better hover handling
+                path.addEventListener('mouseenter', function(event) {
+                    if (isHovered) return;
+                    isHovered = true;
+                    this.style.cursor = 'pointer';
+                });
+
+                path.addEventListener('mouseleave', function(event) {
+                    isHovered = false;
+                    this.style.cursor = 'pointer';
+                });
+                
+                // Performance: Add to fragment instead of directly to DOM
+                countriesGroup.appendChild(path);
+                countryPaths.push(path);
+                         });
+            
+            // Performance: Batch DOM updates
+            console.log(`Rendered ${countryPaths.length} countries with optimized performance`);
+            
+            const zoomControls = document.createElement('div');
              zoomControls.className = 'zoom-controls';
              zoomControls.innerHTML = `
                  <button id="zoomIn" class="zoom-btn">+</button>
